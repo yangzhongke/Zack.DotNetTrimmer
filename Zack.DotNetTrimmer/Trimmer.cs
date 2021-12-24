@@ -39,13 +39,22 @@ class Trimmer
         {
             psInfo.ArgumentList.Add(a);
         }
-
-        using Process? p = Process.Start(psInfo);
+        Process? p = Process.Start(psInfo);
         if (p == null)
         {
             Console.WriteLine("Error: Starting process failed!");
             return;
         }
+        Console.CancelKeyPress += (_, ck) => {
+            //when the user pressed Ctrl+C, the trimmed process will be terminated first.
+            if (p != null)
+            {
+                p.CloseMainWindow();
+                p.WaitForExit();
+                p = null;
+                ck.Cancel = true;//prevent the current Trimmer process from being terminated by Ctrl+C
+            }
+        };
         var providers = new List<EventPipeProvider>()
         {
             new EventPipeProvider("Microsoft-Windows-DotNETRuntime",
@@ -79,16 +88,23 @@ class Trimmer
                     loadedAssemblies.Add(asmFullPath);
                 }
             }
-            /*
+            //for Linux
+            else if(obj is DomainModuleLoadUnloadTraceData)
+            {
+                var data = (DomainModuleLoadUnloadTraceData)obj;
+                string asmFullPath = data.ModuleILPath;
+                loadedAssemblies.Add(asmFullPath);
+            }
             else
             {
                 string typeName = obj.GetType().Name;
                 if(!typeName.StartsWith("GC")&&!typeName.Contains("GCHandle")
                     &&!typeName.Contains("ILStub"))
                 {
-                    File.AppendAllText("d:/log.log", $"{typeName} {obj}\r\n");
+                    string logFilePath = Path.Combine(startupDir, "Zack.DotNetTrimmer.log");
+                    File.AppendAllText(logFilePath, $"{typeName} {obj}\r\n");
                 }                
-            }*/
+            }
         };
 
         try
@@ -123,5 +139,7 @@ class Trimmer
         }
 
         Console.WriteLine($"done, reduced file size:{totalSize:0.00} MB");
+        Console.WriteLine("Waiting for exit.");
+        if (p!=null)p.Dispose();
     }
 }
