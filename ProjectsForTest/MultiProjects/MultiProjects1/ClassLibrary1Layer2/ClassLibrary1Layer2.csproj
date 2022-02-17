@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ClassLibrary1Layer3\ClassLibrary1Layer3.csproj" />
+    <ProjectReference Include="..\ClassLibrary2Layer3\ClassLibrary2Layer3.csproj" />
+  </ItemGroup>
+
+</Project>

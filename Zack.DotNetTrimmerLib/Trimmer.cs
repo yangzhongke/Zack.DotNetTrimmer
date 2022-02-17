@@ -4,19 +4,38 @@ using Microsoft.Diagnostics.Tracing.Parsers;
 using Microsoft.Diagnostics.Tracing.Parsers.Clr;
 using System.Diagnostics;
 using System.Diagnostics.Tracing;
-using static Zack.DotNetTrimmer.PEHelpers;
+using System.Reflection.PortableExecutable;
+using static Zack.DotNetTrimmerLib.PEHelpers;
 
-namespace Zack.DotNetTrimmer;
-class Trimmer
+namespace Zack.DotNetTrimmerLib;
+public class Trimmer
 {
-    private CommandLineOptions options;
+    private TimmerOptions options;
+    public event EventHandler<FileRemovedEventArgs> FileRemoved;
+    public event EventHandler<MessageReceivedEventArgs> MessageReceived;
 
-    public Trimmer(CommandLineOptions options)
+    public Trimmer(TimmerOptions options)
     {
         this.options = options;
     }
 
-    public void Run()
+    private void FireFileRemoved(string fileFullPath)
+    {
+        if (FileRemoved != null)
+        {
+            FileRemoved(this,new FileRemovedEventArgs(fileFullPath));
+        }
+    }
+    
+    private void FireMessageReceived(string msg)
+    {
+        if(MessageReceived != null)
+        {
+            MessageReceived(this,new MessageReceivedEventArgs(msg));
+        }
+    }
+
+    public bool Run()
     {
         string startupFile = options.StartupFile;
         string startupDir;
@@ -24,35 +43,33 @@ class Trimmer
         var dir = Path.GetDirectoryName(startupFile);
         if (dir == null)
         {
-            Console.WriteLine($"GetDirectoryName() of {startupFile} is empty");
-            return;
+            FireMessageReceived($"GetDirectoryName() of {startupFile} is empty");
+            return false;
         }
         else
         {
             startupDir = dir;
         }
-
         ProcessStartInfo psInfo = new ProcessStartInfo(startupFile);
         psInfo.UseShellExecute = true;
         psInfo.WorkingDirectory = startupDir;
-        foreach(var a in options.Arguments)
-        {
-            psInfo.ArgumentList.Add(a);
-        }
+        psInfo.Arguments = string.Join(" ", options.Arguments);
         Process? p = Process.Start(psInfo);
         if (p == null)
         {
-            Console.WriteLine("Error: Starting process failed!");
-            return;
+            FireMessageReceived("Error: Starting process failed!");
+            return false;
         }
         Console.CancelKeyPress += (_, ck) => {
             //when the user pressed Ctrl+C, the trimmed process will be terminated first.
             if (p != null)
             {
+                FireMessageReceived($"Application shutting down.");
                 p.CloseMainWindow();
                 p.WaitForExit();
                 p = null;
                 ck.Cancel = true;//prevent the current Trimmer process from being terminated by Ctrl+C
+                FireMessageReceived($"Application shut down, waiting for to be trimmed.");
             }
         };
         var providers = new List<EventPipeProvider>()
@@ -95,6 +112,7 @@ class Trimmer
                 string asmFullPath = data.ModuleILPath;
                 loadedAssemblies.Add(asmFullPath);
             }
+            /*
             else
             {
                 string typeName = obj.GetType().Name;
@@ -104,7 +122,7 @@ class Trimmer
                     string logFilePath = Path.Combine(startupDir, "Zack.DotNetTrimmer.log");
                     File.AppendAllText(logFilePath, $"{typeName} {obj}\r\n");
                 }                
-            }
+            }*/
         };
 
         try
@@ -113,9 +131,8 @@ class Trimmer
         }
         catch (Exception e)
         {
-            Console.WriteLine("Error encountered while processing events");
-            Console.WriteLine(e.ToString());
-            return;
+            FireMessageReceived($"Error encountered while processing events:{e}");
+            return false;
         }
         var allDllFiles = Directory.GetFiles(startupDir, "*.dll", SearchOption.AllDirectories)
             .Where(asmPath => IsManagedAssembly(asmPath));
@@ -124,22 +141,28 @@ class Trimmer
         foreach (string asmFile in unloadedAssemblies)
         {
             File.Delete(asmFile);
-            Console.WriteLine($"Removed: {asmFile}");
+            FireFileRemoved(asmFile);
+            string pdbFile = Path.ChangeExtension(asmFile, ".pdb");
+            if(File.Exists(pdbFile))//delete related pdb files
+            {
+                File.Delete(pdbFile);
+                FireFileRemoved(pdbFile);
+            }
         }
         //Delete *.deps.json and *.runtimeconfig.json when using WinForm on .NET 5
         foreach (var file in Directory.GetFiles(startupDir, "*.deps.json"))
         {
             File.Delete(file);
-            Console.WriteLine($"Removed: {file}");
+            FireFileRemoved(file);
         }
         foreach (var file in Directory.GetFiles(startupDir, "*.runtimeconfig.json"))
         {
             File.Delete(file);
-            Console.WriteLine($"Removed: {file}");
+            FireFileRemoved(file);
         }
-
-        Console.WriteLine($"done, reduced file size:{totalSize:0.00} MB");
-        Console.WriteLine("Waiting for exit.");
+        FireMessageReceived($"done, reduced file size:{totalSize:0.00} MB");
+        FireMessageReceived("Waiting for exit.");
         if (p!=null)p.Dispose();
+        return true;
     }
 }

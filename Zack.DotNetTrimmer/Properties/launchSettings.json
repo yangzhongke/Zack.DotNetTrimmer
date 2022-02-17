@@ -1,20 +1,8 @@
 {
   "profiles": {
-    "WinForms5App1": {
+    "配置文件 1": {
       "commandName": "Project",
-      "commandLineArgs": "E:\\主同步盘\\我的坚果云\\MyCode\\DOTNET\\Zack.DotNetTrimmer\\ProjectsForTest\\WinForms5App1\\WinForms5App1\\bin\\publish\\WinForms5App1.exe"
-    },
-    "Core5WebAPI1": {
-      "commandName": "Project",
-      "commandLineArgs": "E:\\主同步盘\\我的坚果云\\MyCode\\DOTNET\\Zack.DotNetTrimmer\\ProjectsForTest\\Core5WebAPI1\\Core5WebAPI1\\bin\\publish\\Core5WebAPI1.exe --environment \"Development\""
-    },
-    "WpfCore5App1": {
-      "commandName": "Project",
-      "commandLineArgs": "E:\\主同步盘\\我的坚果云\\MyCode\\DOTNET\\Zack.DotNetTrimmer\\ProjectsForTest\\WpfCore5App1\\WpfCore5App1\\bin\\publish\\WpfCore5App1.exe"
-    },
-    "BlazorWebAsm6App1": {
-      "commandName": "Project",
-      "commandLineArgs": "E:\\主同步盘\\我的坚果云\\MyCode\\DOTNET\\Zack.DotNetTrimmer\\ProjectsForTest\\BlazorWebAsm6App1\\BlazorWebAsm6App1\\Server\\bin\\publish\\BlazorWebAsm6App1.Server.exe"
+      "commandLineArgs": "E:\\主同步盘\\我的坚果云\\MyCode\\DOTNET\\Zack.DotNetTrimmer\\ProjectsForTest\\MultiProjects\\MultiProjects1\\ConsoleApp1\\bin\\Release\\net6.0\\publish\\win-x86\\ConsoleApp1.exe"
     }
   }
 }
