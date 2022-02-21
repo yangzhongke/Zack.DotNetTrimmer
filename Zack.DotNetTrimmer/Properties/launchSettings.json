@@ -2,7 +2,7 @@
   "profiles": {
     "配置文件 1": {
       "commandName": "Project",
-      "commandLineArgs": "E:\\主同步盘\\我的坚果云\\MyCode\\DOTNET\\Zack.DotNetTrimmer\\ProjectsForTest\\MultiProjects\\MultiProjects1\\ConsoleApp1\\bin\\Release\\net6.0\\publish\\win-x86\\ConsoleApp1.exe"
+      "commandLineArgs": "E:\\主同步盘\\我的坚果云\\MyCode\\DOTNET\\Zack.DotNetTrimmer\\ProjectsForTest\\ASPNETCore6WebAPI1\\ASPNETCore6WebAPI1\\bin\\publish\\ASPNETCore6WebAPI1.exe --urls=http://localhost:8888/"
     }
   }
 }

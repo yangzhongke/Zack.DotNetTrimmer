@@ -1,9 +1,0 @@
-﻿<?xml version='1.0' encoding='utf-8'?>
-<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="YZKGameWizard" GeneratedClassName="Settings">
-  <Profiles />
-  <Settings>
-    <Setting Name="LastIDEVersion" Type="System.String" Scope="User">
-      <Value Profile="(Default)">VS2012</Value>
-    </Setting>
-  </Settings>
-</SettingsFile>

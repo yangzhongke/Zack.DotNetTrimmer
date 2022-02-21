@@ -1,4 +1,4 @@
-﻿namespace WinForms5App1
+﻿namespace WinFormsCore6App1
 {
     partial class Form1
     {
