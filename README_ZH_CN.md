@@ -26,9 +26,11 @@ Zack.DotNetTrimmer则可以解决这些问题，它支持Windows Forms和WPF等，它会在运行时分
 
 [linux x64](https://github.com/yangzhongke/Zack.DotNetTrimmer/raw/main/Binaries/linux_x64.zip)
 
+[osx x64](https://github.com/yangzhongke/Zack.DotNetTrimmer/raw/main/Binaries/osx-x64.zip)
+
 2) 在命令行中运行Zack.DotNetTrimmer，把待裁剪的程序的全路径做为参数传递给Zack.DotNetTrimmer。运行后，Zack.DotNetTrimmer会以控制台程序开始运行，待裁剪的程序会被自动启动。
 
-3)  执行待裁剪的程序中所有的功能，覆盖所有的代码路径。完成所有功能的执行后，在Zack.DotNetTrimmer的控制台中执行Ctrl+C或者Ctrl+Break向待裁剪的程序的发起关闭请求。稍等一段时间，当待裁剪的程序和Zack.DotNetTrimmer都运行结束后，Zack.DotNetTrimmer会开始进行分析和裁剪，当裁剪结束后会显式“Trimming done.”。这样程序就裁剪完成了。如下图所示：
+3)  执行待裁剪的程序中所有的功能，覆盖所有的代码路径。完成所有功能的执行后，在Zack.DotNetTrimmer的控制台中执行Ctrl+C或者Ctrl+Break向待裁剪的程序的发起关闭请求。稍等一段时间，当待裁剪的程序和Zack.DotNetTrimmer都运行结束后，Zack.DotNetTrimmer会开始进行分析和裁剪，当裁剪结束后会显示“Trimming done.”。这样程序就裁剪完成了。如下图所示：
 
 
 ![程序剪裁结果](https://raw.githubusercontent.com/yangzhongke/Zack.DotNetTrimmer/main/images/1.png)
