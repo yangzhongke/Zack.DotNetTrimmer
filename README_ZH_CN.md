@@ -1,22 +1,23 @@
-# Zack.DotNetTrimmer
-����һ��������.NET Core�������������Ӧ�ó��򡣾���.NET Core���С�����δʹ�õĴ��롿����ơ�.NET���ü��á����Ĺ��ܣ�������������ʹ�þ�̬������ʵ�ֵģ�������ļ���Ч�����������ŵġ�������������ȱ�㣺
-1) �޷�ɾ������ʱû�б�ʹ�õĳ��򼯡����磬���ǵĳ�����ʹ����A���򼯣�A������������B��C�������򼯣�A������ֻ��M1����ʹ����B���򼯣���A������ֻ��M2����ʹ����C���򼯡����ǵĳ�����ֻ������A�е�M1����������δ����A�е�M2��������ȻC����û�б����ǵ��ù����������ڡ�����δʹ�õĴ��롿����ֻ������̬�����ü�飬���C������Ȼ���ᱻ���õ���
-2) �޷��ܺõ�֧�ַ��䡣��������ʹ�þ�̬������ʵ�ֵģ���������ܻ���õ�����ʱ�Żᱻͨ��������صĳ��򼯡�
-3) ��֧��Windows Forms��WPF�������ڳ�����ù���������ǿ�ҵ���ʵ�������������Ŀ����ߡ�
+﻿# Zack.DotNetTrimmer
+这是一个用来对.NET Core程序进行瘦身的应用程序。尽管.NET Core具有【剪裁未使用的代码】（简称“.NET内置剪裁”）的功能，但是由于它是使用静态分析来实现的，因此它的剪裁效果并不是最优的。它有如下两个缺点：
+1) 不支持Windows Forms和WPF，而对于程序剪裁功能需求最强烈的其实反而是桌面程序的开发者。
+2) 无法删除运行时没有被使用的程序集。比如，我们的程序中使用了A程序集，A程序又引用了B、C两个程序集，A程序集中只有M1方法使用了B程序集，而A程序集中只有M2方法使用了C程序集。我们的程序中只调用了A中的M1方法，而从未调用A中的M2方法。虽然C程序集没有被我们调用过，但是由于【剪裁未使用的代码】功能只是做静态的引用检查，因此C程序集仍然不会被剪裁掉。
+3) 无法很好地支持反射。由于它是使用静态分析来实现的，因此它可能会剪裁掉运行时才会被通过反射加载的程序集。
 
-Zack.DotNetTrimmer����Խ����Щ���⣬��֧��Windows Forms��WPF�ȣ�����������ʱ����������صĳ��򼯣��Ӷ���֪��Щ����û�б�ʹ�ã������������ɾ������û�б�ʹ�õĳ��򼯣���������Ȼ��֧�ַ��䡣��Ȼ���κ����ﶼ������ֻ���ŵ㣬û��ȱ�㡣Zack.DotNetTrimmer��ȱ���ǣ���Ҫ�����д����õ���Ŀ�����Ұѳ��������й��ܶ�ȫ�������һ�飬�������ܼ�⵽���κ�����¶����ᱻʹ�õĳ��򼯡�
 
-�������Ч���Աȣ�
-|			   |ԭʼ�ߴ�|.NET���ü���|Zack.DotNetTrimmer|
+Zack.DotNetTrimmer则可以解决这些问题，它 **支持Windows Forms和WPF** ，它会在运行时分析程序加载的程序集，从而得知哪些程序集没有被使用，因此它不仅 **能删掉更多没有被使用的程序集** ，而且能天然地 **支持反射** 。当然，任何事物都不可能只有优点，没有缺点。Zack.DotNetTrimmer的缺点是，它要求运行待剪裁的项目，并且把程序中所有功能都全面地运行一遍，这样才能检测到在任何情况下都不会被使用的程序集。
+
+程序剪裁效果对比：
+|			   |原始尺寸|.NET内置剪裁|Zack.DotNetTrimmer|
 |  ----        | ----   | ----       | ----             |
-|��Core MVC��Ŀ| 97MB   |  50.3MB    | 43.6MB           |
-|��WebAPI��Ŀ  | 93MB   |  46.3MB    | 34.5 MB          |
-| ��WPF��Ŀ    | 152 MB |  ��֧��    | 75.2 MB          |
-|��WinForms��Ŀ| 152 MB |  ��֧��    | 50.0 MB          |
+|空Core MVC项目| 97MB   |  50.3MB    | 43.6MB           |
+|空WebAPI项目  | 93MB   |  46.3MB    | 34.5 MB          |
+| 空WPF项目    | 152 MB |  不支持    | 75.2 MB          |
+|空WinForms项目| 152 MB |  不支持    | 50.0 MB          |
 
 
-�÷���
-1) ����Zack.DotNetTrimmer�Ŀ�ִ�г��򣬲��ҽ�ѹ���򵽴���
+用法：
+1) 下载Zack.DotNetTrimmer的可执行程序，并且解压程序到磁盘
 
 [windows x86](https://github.com/yangzhongke/Zack.DotNetTrimmer/raw/main/Binaries/windowsx86.zip)
 
@@ -28,29 +29,29 @@ Zack.DotNetTrimmer����Խ����Щ���⣬��֧��Windows Forms��WPF�ȣ�����������ʱ��
 
 [osx x64](https://github.com/yangzhongke/Zack.DotNetTrimmer/raw/main/Binaries/osx-x64.zip)
 
-2) �������ü�����Ŀ������ѡ�����ɵ����ļ�����
-3) ��������������Zack.DotNetTrimmer���Ѵ��ü��ĳ����ȫ·����Ϊ�������ݸ�Zack.DotNetTrimmer�����磺
+2) 发布待裁剪的项目。请勿勾选【生成单个文件】。
+3) 在命令行中运行Zack.DotNetTrimmer，把待裁剪的程序的全路径做为参数传递给Zack.DotNetTrimmer。比如：
 
 ```
 Zack.DotNetTrimmer.exe d:\a\ASPNETCore6WebAPI1.exe
 ```
 
-���к�Zack.DotNetTrimmer���Կ���̨����ʼ���У����ü��ĳ���ᱻ�Զ�������
+运行后，Zack.DotNetTrimmer会以控制台程序开始运行，待裁剪的程序会被自动启动。
 
-4)  ִ�д��ü��ĳ��������еĹ��ܣ��������еĴ���·����������й��ܵ�ִ�к���Zack.DotNetTrimmer�Ŀ���̨��ִ��Ctrl+C����Ctrl+Break����ü��ĳ���ķ���ر������Ե�һ��ʱ�䣬�����ü��ĳ����Zack.DotNetTrimmer�����н�����Zack.DotNetTrimmer�Ὺʼ���з����Ͳü������ü����������ʾ��Trimming done.����
+4)  执行待裁剪的程序中所有的功能，覆盖所有的代码路径。完成所有功能的执行后，在Zack.DotNetTrimmer的控制台中执行Ctrl+C或者Ctrl+Break向待裁剪的程序的发起关闭请求。稍等一段时间，当待裁剪的程序和Zack.DotNetTrimmer都运行结束后，Zack.DotNetTrimmer会开始进行分析和裁剪，当裁剪结束后会显示“Trimming done.”。
 
-��������Ͳü�����ˡ�����ͼ��ʾ��
+这样程序就裁剪完成了。如下图所示：
 
 
-![������ý��](https://raw.githubusercontent.com/yangzhongke/Zack.DotNetTrimmer/main/images/1.png)
+![程序剪裁结果](https://raw.githubusercontent.com/yangzhongke/Zack.DotNetTrimmer/main/images/1.png)
 
-���⣺
-1) ��θ����ü����򴫵������в�����
-�Ѳ��������ŵ����ü��ĳ����ȫ·���󼴿ɣ�����
+问题：
+1) 如何给待裁剪程序传递命令行参数？
+把参数继续放到待裁剪的程序的全路径后即可，比如
 
 ```
 Zack.DotNetTrimmer.exe d:\a\ASPNETCore6WebAPI1.exe --urls=http://localhost:8888/
 ```
 
-2) ��λָ���ɾ�����ļ���
-Zack.DotNetTrimmer�˳�ǰ������ʾ����·������ȥ�Ǹ�·����ȡ�ü�ǰ�ı��ݰ汾��
+2) 如何恢复被删除的文件？
+Zack.DotNetTrimmer退出前，会提示备份路径，请去那个路径获取裁剪前的备份版本。
