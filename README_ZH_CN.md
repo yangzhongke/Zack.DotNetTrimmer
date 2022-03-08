@@ -1,4 +1,6 @@
 ﻿# Zack.DotNetTrimmer
+[Document(English Version)](https://github.com/yangzhongke/Zack.DotNetTrimmer/blob/main/README.md)
+
 这是一个用来对.NET Core程序进行瘦身的应用程序。尽管.NET Core具有【剪裁未使用的代码】（简称“.NET内置剪裁”）的功能，但是由于它是使用静态分析来实现的，因此它的剪裁效果并不是最优的。它有如下两个缺点：
 1) 不支持Windows Forms和WPF，而对于程序剪裁功能需求最强烈的其实反而是桌面程序的开发者。
 2) 无法删除运行时没有被使用的程序集。比如，我们的程序中使用了A程序集，A程序又引用了B、C两个程序集，A程序集中只有M1方法使用了B程序集，而A程序集中只有M2方法使用了C程序集。我们的程序中只调用了A中的M1方法，而从未调用A中的M2方法。虽然C程序集没有被我们调用过，但是由于【剪裁未使用的代码】功能只是做静态的引用检查，因此C程序集仍然不会被剪裁掉。
