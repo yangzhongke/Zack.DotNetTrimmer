@@ -40,4 +40,4 @@ else
 {
     Console.WriteLine("Trimming failed.");
 }
-Console.WriteLine($"Original files has been backup into {backupDir}");
+Console.WriteLine($"Original files have been backup into {backupDir}");
