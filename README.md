@@ -47,6 +47,7 @@ So the program is clipped. As shown below:
 ![Result](https://raw.githubusercontent.com/yangzhongke/Zack.DotNetTrimmer/main/images/1.png)
 
 FAQ：
+
 Q1) How do I pass command-line arguments to the program to be trimmed?
 
 Answer:
@@ -58,4 +59,5 @@ Zack.DotNetTrimmer.exe d:\a\ASPNETCore6WebAPI1.exe --urls=http://localhost:8888/
 Q2) How to restore the deleted files?
 
 Answer:
+
 Before it exits, it will prompt the backup path, please go to that path to get the backup version. 
