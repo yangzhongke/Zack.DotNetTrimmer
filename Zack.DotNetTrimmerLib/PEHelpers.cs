@@ -12,9 +12,9 @@ public static class PEHelpers
         {
             return peReader.HasMetadata && peReader.GetMetadataReader().IsAssembly;
         }
-        catch(BadImageFormatException)
+        catch (BadImageFormatException)
         {
             return false;
-        }       
+        }
     }
 }

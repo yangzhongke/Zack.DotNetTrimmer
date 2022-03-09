@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Zack.DotNetTrimmerLib
+﻿namespace Zack.DotNetTrimmerLib
 {
     public static class BackupHelper
     {
@@ -10,7 +6,7 @@ namespace Zack.DotNetTrimmerLib
         {
             string name = Path.GetFileNameWithoutExtension(startupFile);
             string srcDir = Path.GetDirectoryName(startupFile);
-            string destDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal),name,"Backup"+DateTime.Now.ToString("yyyyMMddhhmmss"));
+            string destDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), name, "Backup" + DateTime.Now.ToString("yyyyMMddhhmmss"));
             CopyDirectory(srcDir, destDir, true);
             return destDir;
         }

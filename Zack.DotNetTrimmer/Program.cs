@@ -11,7 +11,7 @@ if (args.Length <= 0)
 }
 string startupFile = args[0];
 string[] arguments = args.Skip(1).ToArray();
-if(PEHelpers.IsManagedAssembly(startupFile))
+if (PEHelpers.IsManagedAssembly(startupFile))
 {
     //if the file is based on .NET Framework
     var moduleDef = AsmResolver.DotNet.ModuleDefinition.FromFile(startupFile);
@@ -23,16 +23,18 @@ if(PEHelpers.IsManagedAssembly(startupFile))
 }
 
 string backupDir = BackupHelper.BackupProject(startupFile);
-TimmerOptions cmdOpts = new TimmerOptions {StartupFile=startupFile,Arguments=arguments };
+TimmerOptions cmdOpts = new TimmerOptions { StartupFile = startupFile, Arguments = arguments };
 Trimmer trimmer = new Trimmer(cmdOpts);
-trimmer.MessageReceived += (s, e) => {
+trimmer.MessageReceived += (s, e) =>
+{
     Console.WriteLine(e.Message);
 };
-trimmer.FileRemoved += (s, e) => {
+trimmer.FileRemoved += (s, e) =>
+{
     Console.WriteLine($"File removed:{e.FileFullPath}");
 };
 Console.WriteLine("Press Ctrl+C or Ctrl+Break to terminate the application to be trimmed.");
-if(trimmer.Run())
+if (trimmer.Run())
 {
     Console.WriteLine("Trimming done.");
 }

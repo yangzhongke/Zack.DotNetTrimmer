@@ -4,7 +4,8 @@ using Microsoft.Diagnostics.Tracing.Parsers;
 using Microsoft.Diagnostics.Tracing.Parsers.Clr;
 using System.Diagnostics;
 using System.Diagnostics.Tracing;
-using System.Reflection.PortableExecutable;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using static Zack.DotNetTrimmerLib.PEHelpers;
 
 namespace Zack.DotNetTrimmerLib;
@@ -23,15 +24,15 @@ public class Trimmer
     {
         if (FileRemoved != null)
         {
-            FileRemoved(this,new FileRemovedEventArgs(fileFullPath));
+            FileRemoved(this, new FileRemovedEventArgs(fileFullPath));
         }
     }
-    
+
     private void FireMessageReceived(string msg)
     {
-        if(MessageReceived != null)
+        if (MessageReceived != null)
         {
-            MessageReceived(this,new MessageReceivedEventArgs(msg));
+            MessageReceived(this, new MessageReceivedEventArgs(msg));
         }
     }
 
@@ -50,6 +51,14 @@ public class Trimmer
         {
             startupDir = dir;
         }
+
+        HashSet<string> loadedAssemblies = new HashSet<string>();
+        HashSet<string> loadedTypes = new HashSet<string>();
+        var providers = new List<EventPipeProvider>()
+        {
+            new EventPipeProvider("Microsoft-Windows-DotNETRuntime",
+                EventLevel.Informational, (long)ClrTraceEventParser.Keywords.All)
+        };
         ProcessStartInfo psInfo = new ProcessStartInfo(startupFile);
         psInfo.UseShellExecute = true;
         psInfo.WorkingDirectory = startupDir;
@@ -60,7 +69,8 @@ public class Trimmer
             FireMessageReceived("Error: Starting process failed!");
             return false;
         }
-        Console.CancelKeyPress += (_, ck) => {
+        Console.CancelKeyPress += (_, ck) =>
+        {
             //when the user pressed Ctrl+C, the trimmed process will be terminated first.
             if (p != null)
             {
@@ -72,16 +82,12 @@ public class Trimmer
                 FireMessageReceived($"Application shut down, waiting for to be trimmed.");
             }
         };
-        var providers = new List<EventPipeProvider>()
-        {
-            new EventPipeProvider("Microsoft-Windows-DotNETRuntime",
-                EventLevel.Informational, (long)ClrTraceEventParser.Keywords.All)
-        };
+
         var client = new DiagnosticsClient(p.Id);
-        HashSet<string> loadedAssemblies = new HashSet<string>();
         using EventPipeSession session = client.StartEventPipeSession(providers, false);
         var source = new EventPipeEventSource(session.EventStream);
-        source.Clr.All += (TraceEvent obj) => {
+        source.Clr.All += (TraceEvent obj) =>
+        {
             if (obj is KnownPathProbedTraceData)
             {
                 var data = (KnownPathProbedTraceData)obj;
@@ -106,23 +112,18 @@ public class Trimmer
                 }
             }
             //for Linux
-            else if(obj is DomainModuleLoadUnloadTraceData)
+            else if (obj is DomainModuleLoadUnloadTraceData)
             {
                 var data = (DomainModuleLoadUnloadTraceData)obj;
                 string asmFullPath = data.ModuleILPath;
                 loadedAssemblies.Add(asmFullPath);
             }
-            /*
-            else
+            else if (obj is TypeLoadStopTraceData)
             {
-                string typeName = obj.GetType().Name;
-                if(!typeName.StartsWith("GC")&&!typeName.Contains("GCHandle")
-                    &&!typeName.Contains("ILStub"))
-                {
-                    string logFilePath = Path.Combine(startupDir, "Zack.DotNetTrimmer.log");
-                    File.AppendAllText(logFilePath, $"{typeName} {obj}\r\n");
-                }                
-            }*/
+                var data = (TypeLoadStopTraceData)obj;
+                string typeName = data.TypeName;
+                loadedTypes.Add(typeName);
+            }
         };
 
         try
@@ -134,35 +135,108 @@ public class Trimmer
             FireMessageReceived($"Error encountered while processing events:{e}");
             return false;
         }
+
+        
         var allDllFiles = Directory.GetFiles(startupDir, "*.dll", SearchOption.AllDirectories)
-            .Where(asmPath => IsManagedAssembly(asmPath));
-        var unloadedAssemblies = allDllFiles.Except(loadedAssemblies);
+            .Where(asmPath => !IsFileIgnored(asmPath) && IsManagedAssembly(asmPath)).ToArray();
+        var unloadedAssemblies = allDllFiles.Except(loadedAssemblies).ToArray();
         var totalSize = unloadedAssemblies.Select(f => new FileInfo(f).Length).Sum() * 1.0 / (1024 * 1024);
         foreach (string asmFile in unloadedAssemblies)
         {
             File.Delete(asmFile);
             FireFileRemoved(asmFile);
             string pdbFile = Path.ChangeExtension(asmFile, ".pdb");
-            if(File.Exists(pdbFile))//delete related pdb files
+            if (File.Exists(pdbFile))//delete related pdb files
             {
                 File.Delete(pdbFile);
                 FireFileRemoved(pdbFile);
             }
         }
-        //Delete *.deps.json and *.runtimeconfig.json when using WinForm on .NET 5
+        /*
+        foreach(var asmFile in loadedAssemblies)
+        {
+            using (var mod = ModuleDefMD.Load(asmFile))
+            {
+                List<TypeDef> typesToBeRemoved = new List<TypeDef>();
+                foreach (var type in mod.Types)
+                {
+                    if (!loadedTypes.Contains(type.FullName))
+                    {
+                        typesToBeRemoved.Add(type);
+                    }
+                }
+                foreach (var type in typesToBeRemoved)
+                {
+                    mod.Types.Remove(type);
+                }
+                mod.Write(asmFile + ".tmp");
+            }
+            File.Delete(asmFile);
+            File.Move(asmFile + ".tmp", asmFile);
+        }  */
+
         foreach (var file in Directory.GetFiles(startupDir, "*.deps.json"))
         {
-            File.Delete(file);
-            FireFileRemoved(file);
-        }
-        foreach (var file in Directory.GetFiles(startupDir, "*.runtimeconfig.json"))
-        {
-            File.Delete(file);
-            FireFileRemoved(file);
-        }
+            TidyDeps_json(unloadedAssemblies, file);
+            FireMessageReceived($"{file} tidied up.");
+        }        
         FireMessageReceived($"done, reduced file size:{totalSize:0.00} MB");
         FireMessageReceived("Waiting for exit.");
-        if (p!=null)p.Dispose();
+        if (p != null) p.Dispose();
         return true;
+    }
+
+    static bool IsFileIgnored(string fileName)
+    {
+        var dirNames = Path.GetDirectoryName(fileName).Split(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+        return dirNames.Contains("_framework");//ignore files under _framework, for Blazor WebAssembly Projects.
+    }
+
+    static void FindNode(JsonObject jsonObject, string propertyName, List<JsonNode> runtimeNodes)
+    {
+        foreach (var childNode in jsonObject)
+        {
+            if (childNode.Key == propertyName&&childNode.Value!=null)
+            {
+                runtimeNodes.Add(childNode.Value);
+            }
+            else if (childNode.Value is JsonObject)
+            {
+                FindNode((JsonObject)childNode.Value, propertyName, runtimeNodes);
+            }
+        }
+    }
+
+    
+    static void TidyDeps_json(IEnumerable<string> unloadedAssemblies,string jsonFile)
+    {
+        var unloadedFileNames = new HashSet<string>(unloadedAssemblies.Select(f => Path.GetFileName(f)));
+        JsonNode jsonRoot;
+        using (FileStream inStream = File.OpenRead(jsonFile))
+        {
+            jsonRoot = JsonNode.Parse(inStream).Root;            
+        }
+        var targetsNode = jsonRoot["targets"];
+        if (targetsNode == null) return;
+        List<JsonNode> runtimeNodes = new List<JsonNode>();
+        FindNode((JsonObject)targetsNode, "runtime", runtimeNodes);
+        foreach(var runtimeNode in runtimeNodes)
+        {
+            JsonObject runtimeObject = (JsonObject)runtimeNode;
+            foreach (var runtimeItem in runtimeObject.ToArray())
+            {
+                string fileName = runtimeItem.Key;
+                if (unloadedFileNames.Contains(fileName))
+                {
+                    runtimeObject.Remove(fileName);
+                }
+            }
+        }
+        JsonWriterOptions jsonWriterOptions = new JsonWriterOptions { Indented=true};
+        using (FileStream outStream = File.Open(jsonFile,FileMode.Create,FileAccess.Write))
+        using (Utf8JsonWriter writer = new Utf8JsonWriter(outStream, jsonWriterOptions))
+        {
+            jsonRoot.WriteTo(writer);
+        }
     }
 }
