@@ -32,7 +32,7 @@ How to：
 [osx x64](https://github.com/yangzhongke/Zack.DotNetTrimmer/raw/main/Binaries/osx-x64.zip)
 
 2) Publish the project to be trimmed. Do not select **Produce single file** .
-3) Run DotNetTrimmer on the command line and pass the full path of the program to be trimmed as the parameter. For example:  
+3) Run DotNetTrimmer on the command line and pass the **full path** of the program to be trimmed as the parameter. For example:  
 
 ```
 Zack.DotNetTrimmer.exe d:\a\ASPNETCore6WebAPI1.exe

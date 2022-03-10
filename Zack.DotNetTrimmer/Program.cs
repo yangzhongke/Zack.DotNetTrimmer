@@ -6,10 +6,16 @@ using Zack.DotNetTrimmerLib;
 
 if (args.Length <= 0)
 {
-    Console.WriteLine("Arguments: a.exe arg1 arg2");
+    Console.WriteLine("Error: Arguments: d:/a/test.exe arg1 arg2");
     return;
 }
 string startupFile = args[0];
+if(!Path.IsPathRooted(startupFile))
+{
+    Console.WriteLine($"Error: Please specify the full path instead of {startupFile}");
+    return;
+}
+
 string[] arguments = args.Skip(1).ToArray();
 if (PEHelpers.IsManagedAssembly(startupFile))
 {
