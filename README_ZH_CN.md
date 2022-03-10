@@ -31,7 +31,7 @@ Zack.DotNetTrimmer则可以解决这些问题，它 **支持Windows Forms和WPF*
 
 [osx x64](https://github.com/yangzhongke/Zack.DotNetTrimmer/raw/main/Binaries/osx-x64.zip)
 
-2) 发布待裁剪的项目。请勿勾选【生成单个文件】。
+2) 发布待裁剪的项目。请勿勾选 **【生成单个文件】**。
 3) 在命令行中运行Zack.DotNetTrimmer，把待裁剪的程序的 **全路径** 做为参数传递给Zack.DotNetTrimmer。比如：
 
 ```

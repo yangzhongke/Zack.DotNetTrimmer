@@ -1,4 +1,6 @@
-﻿using Microsoft.Diagnostics.NETCore.Client;
+﻿using dnlib.DotNet;
+using dnlib.DotNet.Emit;
+using Microsoft.Diagnostics.NETCore.Client;
 using Microsoft.Diagnostics.Tracing;
 using Microsoft.Diagnostics.Tracing.Parsers;
 using Microsoft.Diagnostics.Tracing.Parsers.Clr;
@@ -124,6 +126,20 @@ public class Trimmer
                 string typeName = data.TypeName;
                 loadedTypes.Add(typeName);
             }
+            else if (obj is GCBulkTypeTraceData)
+            {
+                var data = (GCBulkTypeTraceData)obj;
+                for(int i=0;i<data.Count;i++)
+                {
+                    string typeName = data.Values(i).TypeName;
+                    loadedTypes.Add(typeName);
+                }
+            }
+            else if(obj is R2RGetEntryPointTraceData)
+            {
+                var data = (R2RGetEntryPointTraceData)obj;
+                loadedTypes.Add(data.MethodNamespace);
+            }
         };
 
         try
@@ -136,7 +152,7 @@ public class Trimmer
             return false;
         }
 
-        
+
         var allDllFiles = Directory.GetFiles(startupDir, "*.dll", SearchOption.AllDirectories)
             .Where(asmPath => !IsFileIgnored(asmPath) && IsManagedAssembly(asmPath)).ToArray();
         var unloadedAssemblies = allDllFiles.Except(loadedAssemblies).ToArray();
@@ -152,14 +168,46 @@ public class Trimmer
                 FireFileRemoved(pdbFile);
             }
         }
-        /*
-        foreach(var asmFile in loadedAssemblies)
+
+        SlimAssemblies(loadedAssemblies, loadedTypes);
+
+        foreach (var file in Directory.GetFiles(startupDir, "*.deps.json"))
         {
+            TidyDeps_json(unloadedAssemblies, file);
+            FireMessageReceived($"{file} tidied up.");
+        }
+        FireMessageReceived($"done, reduced file size:{totalSize:0.00} MB");
+        FireMessageReceived("Waiting for exit.");
+        if (p != null) p.Dispose();
+        return true;
+    }
+
+    /// <summary>
+    /// clear the bodies of methods of unused classes in loadedAssemblies
+    /// </summary>
+    /// <param name="loadedAssemblies"></param>
+    /// <param name="loadedTypes"></param>
+    private static void SlimAssemblies(HashSet<string> loadedAssemblies, HashSet<string> loadedTypes)
+    {
+        foreach (var asmFile in loadedAssemblies)
+        {
+            if (!File.Exists(asmFile)) continue;
+            if (!IsManagedAssembly(asmFile)) continue;
+            string fileName = Path.GetFileName(asmFile);
+            if (fileName.Contains("Framework") || fileName.Contains("Core")) continue;
+            using var memStream = new MemoryStream();
             using (var mod = ModuleDefMD.Load(asmFile))
             {
+
                 List<TypeDef> typesToBeRemoved = new List<TypeDef>();
                 foreach (var type in mod.Types)
                 {
+                    if (type.IsGlobalModuleType) continue;//<Module>
+
+                    //struct, nested classes are not included in the report by DiagnosticsClient
+                    if (type.IsValueType) continue;//UriCreationOptions etc
+                    if (type.IsNested) continue;
+                    if (type.HasGenericParameters) continue;//generic classes may have different names as in the report by DiagnosticsClient, like A`1 and A<int>
                     if (!loadedTypes.Contains(type.FullName))
                     {
                         typesToBeRemoved.Add(type);
@@ -167,23 +215,27 @@ public class Trimmer
                 }
                 foreach (var type in typesToBeRemoved)
                 {
-                    mod.Types.Remove(type);
+                    //these methods may be referenced by others, so they cannot be removed; however, the body can be replace by 'throw null;'
+                    foreach (var method in type.Methods)
+                    {
+                        if (!method.IsManaged||method.IsConstructor || method.IsStaticConstructor) continue;
+                        if (method.Body != null)
+                        {
+                            method.Body.ExceptionHandlers.Clear();
+                            method.Body.Instructions.Clear();
+                            method.Body.Variables.Clear();
+                            method.Body.Instructions.Add(new Instruction(OpCodes.Nop) { Offset = 0 });
+                            method.Body.Instructions.Add(new Instruction(OpCodes.Ldnull) { Offset = 1 });
+                            method.Body.Instructions.Add(new Instruction(OpCodes.Throw) { Offset = 2 });
+                        }
+                    }
                 }
-                mod.Write(asmFile + ".tmp");
+                mod.Write(memStream);
             }
-            File.Delete(asmFile);
-            File.Move(asmFile + ".tmp", asmFile);
-        }  */
-
-        foreach (var file in Directory.GetFiles(startupDir, "*.deps.json"))
-        {
-            TidyDeps_json(unloadedAssemblies, file);
-            FireMessageReceived($"{file} tidied up.");
-        }        
-        FireMessageReceived($"done, reduced file size:{totalSize:0.00} MB");
-        FireMessageReceived("Waiting for exit.");
-        if (p != null) p.Dispose();
-        return true;
+            using var fileStream = File.Open(asmFile, FileMode.Create);
+            memStream.Position = 0;
+            memStream.CopyTo(fileStream);
+        }
     }
 
     static bool IsFileIgnored(string fileName)
