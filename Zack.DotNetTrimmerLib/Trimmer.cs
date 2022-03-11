@@ -169,7 +169,7 @@ public class Trimmer
             }
         }
 
-        SlimAssemblies(loadedAssemblies, loadedTypes);
+        //SlimAssemblies(loadedAssemblies, loadedTypes);
 
         foreach (var file in Directory.GetFiles(startupDir, "*.deps.json"))
         {
@@ -194,7 +194,7 @@ public class Trimmer
             if (!File.Exists(asmFile)) continue;
             if (!IsManagedAssembly(asmFile)) continue;
             string fileName = Path.GetFileName(asmFile);
-            if (fileName.Contains("Framework") || fileName.Contains("Core")) continue;
+            //if (fileName.Contains("Framework") || fileName.Contains("Core")) continue;
             using var memStream = new MemoryStream();
             using (var mod = ModuleDefMD.Load(asmFile))
             {
