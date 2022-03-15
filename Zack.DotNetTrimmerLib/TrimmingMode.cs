@@ -9,7 +9,7 @@
         /// <summary>
         /// Load a file contains activities and trim the application
         /// </summary>
-        Load,
+        Apply,
         /// <summary>
         /// check the unused assebemblies and delete them in one go
         /// </summary>

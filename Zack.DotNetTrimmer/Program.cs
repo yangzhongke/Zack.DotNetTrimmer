@@ -2,19 +2,22 @@
 //https://docs.microsoft.com/en-us/dotnet/core/diagnostics/diagnostics-client-library
 //https://docs.microsoft.com/en-us/dotnet/core/dependency-loading/collect-details
 
+using System.Reflection;
 using Zack.DotNetTrimmerLib;
 using static Zack.DotNetTrimmer.ConsoleHelpers;
+
+var asmVer = Assembly.GetExecutingAssembly().GetName().Version;
+WriteInfo($"Version:{asmVer}({Environment.OSVersion})");
 
 if (args.Length <= 0)
 {
     WriteError("Usage: Zack.DotNetTrimmer.exe d:/a/test.exe arg1 arg2");
-    WriteError("Usage: Zack.DotNetTrimmer.exe --record d:/1.zrec d:/a/test.exe arg1 arg2");
-    WriteError("Usage: Zack.DotNetTrimmer.exe --load d:/1.zrec d:/a/test.exe arg1 arg2");
+    WriteError("Usage: Zack.DotNetTrimmer.exe --record d:/1.json d:/a/test.exe arg1 arg2");
+    WriteError("Usage: Zack.DotNetTrimmer.exe --apply d:/1.json d:/a/test.exe arg1 arg2");
     return;
 }
-
-//--record d:/1.zrec
-//--load d:/1.zrec
+//--record d:/1.json
+//--apply d:/1.json
 string firstParameter =args[0];
 string? recordFileName=null;
 
@@ -27,13 +30,13 @@ if (firstParameter.StartsWith("--"))
     {
         mode = TrimmingMode.Record;
     }
-    else if (firstParameter == "--load")
+    else if (firstParameter == "--apply")
     {
-        mode = TrimmingMode.Load;
+        mode = TrimmingMode.Apply;
     }
     else
     {
-        WriteError("Error: Invalid mode, only --record and --load are allowed.");
+        WriteError("Error: Invalid mode, only --record and --apply are allowed.");
         return;
     }
     recordFileName = args[1];
@@ -85,13 +88,8 @@ trimmer.FileRemoved += (s, e) =>
 {
     WriteInfo($"File removed:{e.FileFullPath}");
 };
-WriteInfo("Press Ctrl+C or Ctrl+Break to terminate the application to be trimmed.");
-if (trimmer.Run())
+trimmer.Run();
+if(mode== TrimmingMode.Apply||mode== TrimmingMode.Direct)
 {
-    WriteInfo("Trimming done.");
+    WriteInfo($"Original files have been backup into {backupDir}");
 }
-else
-{
-    WriteError("Trimming failed.");
-}
-WriteInfo($"Original files have been backup into {backupDir}");

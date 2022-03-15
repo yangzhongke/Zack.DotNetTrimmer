@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="dnlib" Version="3.4.0" />
+    <PackageReference Include="Zack.Commons" Version="1.1.9" />
   </ItemGroup>
 
 </Project>

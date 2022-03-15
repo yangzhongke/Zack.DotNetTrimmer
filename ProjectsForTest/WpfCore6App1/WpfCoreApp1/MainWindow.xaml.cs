@@ -15,6 +15,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Zack.Commons;
 
 namespace WpfCoreApp1
 {
@@ -30,14 +31,22 @@ namespace WpfCoreApp1
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            using (var mod = ModuleDefMD.Load(Assembly.GetExecutingAssembly().Modules.Single()))
-            {
-                mod.Write("d:/1.dll");
-            }
+            /*
+            
                 MessageBox.Show(Assembly.GetExecutingAssembly().Location);
             MessageBox.Show(typeof(MainWindow).Assembly.Location);
-            MessageBox.Show(Process.GetCurrentProcess().ProcessName);
+            MessageBox.Show(Process.GetCurrentProcess().ProcessName);*/
             MessageBox.Show(Process.GetCurrentProcess().MainModule.FileName);
+            using (var mod = ModuleDefMD.Load(Assembly.GetExecutingAssembly().Modules.Single()))
+            {
+                mod.Write("e:/temp/1.dll");
+            }
+
+        }
+
+        private void Button_Click_1(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show(HashHelper.ComputeMd5Hash("xxxx"));
         }
     }
 }
