@@ -1,6 +1,9 @@
-﻿using System;
+﻿using dnlib.DotNet;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -23,6 +26,18 @@ namespace WpfCoreApp1
         public MainWindow()
         {
             InitializeComponent();
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            using (var mod = ModuleDefMD.Load(Assembly.GetExecutingAssembly().Modules.Single()))
+            {
+                mod.Write("d:/1.dll");
+            }
+                MessageBox.Show(Assembly.GetExecutingAssembly().Location);
+            MessageBox.Show(typeof(MainWindow).Assembly.Location);
+            MessageBox.Show(Process.GetCurrentProcess().ProcessName);
+            MessageBox.Show(Process.GetCurrentProcess().MainModule.FileName);
         }
     }
 }

@@ -6,7 +6,7 @@
         {
             string name = Path.GetFileNameWithoutExtension(startupFile);
             string srcDir = Path.GetDirectoryName(startupFile);
-            string destDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), name, "Backup" + DateTime.Now.ToString("yyyyMMddhhmmss"));
+            string destDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), name, "Backup");
             CopyDirectory(srcDir, destDir, true);
             return destDir;
         }
@@ -30,7 +30,7 @@
             foreach (FileInfo file in dir.GetFiles())
             {
                 string targetFilePath = Path.Combine(destinationDir, file.Name);
-                file.CopyTo(targetFilePath);
+                file.CopyTo(targetFilePath,true);
             }
 
             // If recursive and copying subdirectories, recursively call this method

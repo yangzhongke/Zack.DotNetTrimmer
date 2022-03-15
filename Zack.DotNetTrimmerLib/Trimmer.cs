@@ -1,5 +1,6 @@
 ﻿using dnlib.DotNet;
 using dnlib.DotNet.Emit;
+using dnlib.DotNet.Writer;
 using Microsoft.Diagnostics.NETCore.Client;
 using Microsoft.Diagnostics.Tracing;
 using Microsoft.Diagnostics.Tracing.Parsers;
@@ -53,9 +54,82 @@ public class Trimmer
         {
             startupDir = dir;
         }
+        RecordFileInfo recordFileInfo;
+        if(options.Mode== TrimmingMode.Record)
+        {
+            string recordFileName = options.RecordFileName;
+            if(File.Exists(recordFileName))
+            {
+                using FileStream fileStream = File.OpenRead(recordFileName);
+                recordFileInfo = JsonSerializer.Deserialize<RecordFileInfo>(fileStream);
+            }
+            else
+            {
+                recordFileInfo = new RecordFileInfo();
+            }
+            if (!RunApp(startupFile, recordFileInfo))
+            {
+                return false;
+            }
+            else
+            {
+                using FileStream fileStream = File.Open(recordFileName,FileMode.Create);
+                JsonSerializer.Serialize(fileStream, fileStream);
+            }
+        }
+        else if (options.Mode == TrimmingMode.Load)
+        {
+            string recordFileName = options.RecordFileName;
+            if (!File.Exists(recordFileName))
+            {
+                throw new Exception($"{recordFileName} not found!");
+            }
+            using FileStream fileStream = File.OpenRead(recordFileName);
+            recordFileInfo = JsonSerializer.Deserialize<RecordFileInfo>(File.ReadAllText(recordFileName));
+        }
+        else if (options.Mode == TrimmingMode.Direct)
+        {
+            recordFileInfo = new RecordFileInfo();
+            if (!RunApp(startupFile, recordFileInfo))
+            {
+                return false;
+            }
+        }
+        else
+        {
+            throw new NotImplementedException($"Unkown mode:{options.Mode}");
+        }
+        
+        var allDllFiles = Directory.GetFiles(startupDir, "*.dll", SearchOption.AllDirectories)
+            .Where(asmPath => !IsFileIgnored(asmPath) && IsManagedAssembly(asmPath)).ToArray();
+        var unloadedAssemblies = allDllFiles.Except(recordFileInfo.LoadedAssemblies).ToArray();
+        var totalSize = unloadedAssemblies.Select(f => new FileInfo(f).Length).Sum() * 1.0 / (1024 * 1024);
+        foreach (string asmFile in unloadedAssemblies)
+        {
+            File.Delete(asmFile);
+            FireFileRemoved(asmFile);
+            string pdbFile = Path.ChangeExtension(asmFile, ".pdb");
+            if (File.Exists(pdbFile))//delete related pdb files
+            {
+                File.Delete(pdbFile);
+                FireFileRemoved(pdbFile);
+            }
+        }
+        SlimAssemblies(recordFileInfo.LoadedAssemblies, recordFileInfo.LoadedTypes);
 
-        HashSet<string> loadedAssemblies = new HashSet<string>();
-        HashSet<string> loadedTypes = new HashSet<string>();
+        foreach (var file in Directory.GetFiles(startupDir, "*.deps.json"))
+        {
+            TidyDeps_json(unloadedAssemblies, file);
+            FireMessageReceived($"{file} tidied up.");
+        }
+        FireMessageReceived($"done, reduced file size:{totalSize:0.00} MB");
+        FireMessageReceived("Waiting for exit.");
+        return true;
+    }
+
+    private bool RunApp(string startupFile, RecordFileInfo recordFileInfo)
+    {
+        string startupDir = Path.GetDirectoryName(startupFile);
         var providers = new List<EventPipeProvider>()
         {
             new EventPipeProvider("Microsoft-Windows-DotNETRuntime",
@@ -65,7 +139,7 @@ public class Trimmer
         psInfo.UseShellExecute = true;
         psInfo.WorkingDirectory = startupDir;
         psInfo.Arguments = string.Join(" ", options.Arguments);
-        Process? p = Process.Start(psInfo);
+        using Process? p = Process.Start(psInfo);
         if (p == null)
         {
             FireMessageReceived("Error: Starting process failed!");
@@ -79,7 +153,6 @@ public class Trimmer
                 FireMessageReceived($"Application shutting down.");
                 p.CloseMainWindow();
                 p.WaitForExit();
-                p = null;
                 ck.Cancel = true;//prevent the current Trimmer process from being terminated by Ctrl+C
                 FireMessageReceived($"Application shut down, waiting for to be trimmed.");
             }
@@ -93,7 +166,7 @@ public class Trimmer
             if (obj is KnownPathProbedTraceData)
             {
                 var data = (KnownPathProbedTraceData)obj;
-                loadedAssemblies.Add(data.FilePath);
+                recordFileInfo.LoadedAssemblies.Add(data.FilePath);
             }
             else if (obj is ResolutionAttemptedTraceData)
             {
@@ -101,7 +174,7 @@ public class Trimmer
                 string asmFullPath = data.ResultAssemblyPath;
                 if (!string.IsNullOrWhiteSpace(asmFullPath))
                 {
-                    loadedAssemblies.Add(asmFullPath);
+                    recordFileInfo.LoadedAssemblies.Add(asmFullPath);
                 }
             }
             else if (obj is ModuleLoadUnloadTraceData)
@@ -110,7 +183,7 @@ public class Trimmer
                 string asmFullPath = data.ModuleILPath;
                 if (!string.IsNullOrWhiteSpace(asmFullPath))
                 {
-                    loadedAssemblies.Add(asmFullPath);
+                    recordFileInfo.LoadedAssemblies.Add(asmFullPath);
                 }
             }
             //for Linux
@@ -118,30 +191,29 @@ public class Trimmer
             {
                 var data = (DomainModuleLoadUnloadTraceData)obj;
                 string asmFullPath = data.ModuleILPath;
-                loadedAssemblies.Add(asmFullPath);
+                recordFileInfo.LoadedAssemblies.Add(asmFullPath);
             }
             else if (obj is TypeLoadStopTraceData)
             {
                 var data = (TypeLoadStopTraceData)obj;
                 string typeName = data.TypeName;
-                loadedTypes.Add(typeName);
+                recordFileInfo.LoadedTypes.Add(typeName);
             }
             else if (obj is GCBulkTypeTraceData)
             {
                 var data = (GCBulkTypeTraceData)obj;
-                for(int i=0;i<data.Count;i++)
+                for (int i = 0; i < data.Count; i++)
                 {
                     string typeName = data.Values(i).TypeName;
-                    loadedTypes.Add(typeName);
+                    recordFileInfo.LoadedTypes.Add(typeName);
                 }
             }
-            else if(obj is R2RGetEntryPointTraceData)
+            else if (obj is R2RGetEntryPointTraceData)
             {
                 var data = (R2RGetEntryPointTraceData)obj;
-                loadedTypes.Add(data.MethodNamespace);
+                recordFileInfo.LoadedTypes.Add(data.MethodNamespace);
             }
         };
-
         try
         {
             source.Process();
@@ -151,34 +223,6 @@ public class Trimmer
             FireMessageReceived($"Error encountered while processing events:{e}");
             return false;
         }
-
-
-        var allDllFiles = Directory.GetFiles(startupDir, "*.dll", SearchOption.AllDirectories)
-            .Where(asmPath => !IsFileIgnored(asmPath) && IsManagedAssembly(asmPath)).ToArray();
-        var unloadedAssemblies = allDllFiles.Except(loadedAssemblies).ToArray();
-        var totalSize = unloadedAssemblies.Select(f => new FileInfo(f).Length).Sum() * 1.0 / (1024 * 1024);
-        foreach (string asmFile in unloadedAssemblies)
-        {
-            File.Delete(asmFile);
-            FireFileRemoved(asmFile);
-            string pdbFile = Path.ChangeExtension(asmFile, ".pdb");
-            if (File.Exists(pdbFile))//delete related pdb files
-            {
-                File.Delete(pdbFile);
-                FireFileRemoved(pdbFile);
-            }
-        }
-
-        //SlimAssemblies(loadedAssemblies, loadedTypes);
-
-        foreach (var file in Directory.GetFiles(startupDir, "*.deps.json"))
-        {
-            TidyDeps_json(unloadedAssemblies, file);
-            FireMessageReceived($"{file} tidied up.");
-        }
-        FireMessageReceived($"done, reduced file size:{totalSize:0.00} MB");
-        FireMessageReceived("Waiting for exit.");
-        if (p != null) p.Dispose();
         return true;
     }
 
@@ -192,19 +236,16 @@ public class Trimmer
         foreach (var asmFile in loadedAssemblies)
         {
             if (!File.Exists(asmFile)) continue;
-            if (!IsManagedAssembly(asmFile)) continue;
             string fileName = Path.GetFileName(asmFile);
-            //if (fileName.Contains("Framework") || fileName.Contains("Core")) continue;
             using var memStream = new MemoryStream();
             using (var mod = ModuleDefMD.Load(asmFile))
             {
-
+                if (mod.IsStrongNameSigned) continue;
                 List<TypeDef> typesToBeRemoved = new List<TypeDef>();
                 foreach (var type in mod.Types)
                 {
-                    if (type.IsGlobalModuleType) continue;//<Module>
-
-                    //struct, nested classes are not included in the report by DiagnosticsClient
+                    if (type.IsGlobalModuleType) continue;//<Module>                    
+                                                          //struct, nested classes are not included in the report by DiagnosticsClient
                     if (type.IsValueType) continue;//UriCreationOptions etc
                     if (type.IsNested) continue;
                     if (type.HasGenericParameters) continue;//generic classes may have different names as in the report by DiagnosticsClient, like A`1 and A<int>
@@ -218,7 +259,8 @@ public class Trimmer
                     //these methods may be referenced by others, so they cannot be removed; however, the body can be replace by 'throw null;'
                     foreach (var method in type.Methods)
                     {
-                        if (!method.IsManaged||method.IsConstructor || method.IsStaticConstructor) continue;
+                        if (!method.IsManaged || method.IsConstructor || method.IsStaticConstructor || method.IsNative) continue;
+                        if (method.CustomAttributes.Any(a => a.TypeFullName == "System.Runtime.CompilerServices.ModuleInitializerAttribute")) continue;
                         if (method.Body != null)
                         {
                             method.Body.ExceptionHandlers.Clear();
@@ -230,7 +272,15 @@ public class Trimmer
                         }
                     }
                 }
-                mod.Write(memStream);
+                if (mod.IsILOnly)
+                {
+                    mod.Write(memStream);
+                }
+                else
+                {
+                    //https://github.com/0xd4d/dnlib/issues/455#issuecomment-1067102411
+                    mod.NativeWrite(memStream);
+                }
             }
             using var fileStream = File.Open(asmFile, FileMode.Create);
             memStream.Position = 0;
