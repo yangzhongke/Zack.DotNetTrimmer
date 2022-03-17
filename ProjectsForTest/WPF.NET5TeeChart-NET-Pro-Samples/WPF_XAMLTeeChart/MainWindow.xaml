@@ -1,0 +1,118 @@
+﻿<Window x:Class="WPF_XAMLTeeChart.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:WPF_XAMLTeeChart"
+				xmlns:teechart="clr-namespace:TeeChart.Xaml.WPF;assembly=TeeChart.Xaml.WPF"
+				xmlns:series="clr-namespace:TeeChart.Xaml.WPF.Series;assembly=TeeChart.Xaml.WPF"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="418.704" Width="767.407">
+  <TabControl>
+    <TabItem Header="Bar Series">
+      <Grid>
+        <teechart:TChart Name="tChart1">
+          <teechart:TChart.Zoom>
+            <teechart:Zoom Direction="Horizontal" MouseButton="Right" StrokeThickness="3">
+              <teechart:Zoom.Fill>
+                <SolidColorBrush Color="Red" Opacity="0.5" />
+              </teechart:Zoom.Fill>
+              <teechart:Zoom.Stroke>
+                <SolidColorBrush Color="BlueViolet" Opacity="0.5" />
+              </teechart:Zoom.Stroke>
+            </teechart:Zoom>
+          </teechart:TChart.Zoom>
+          <teechart:TChart.Scroll>
+            <teechart:Scroll MouseButton="Left" Allow="Horizontal"/>
+          </teechart:TChart.Scroll>
+          <teechart:TChart.Panel>
+            <teechart:Panel StrokeThickness="13.2">
+              <teechart:Panel.Fill>
+                <SolidColorBrush Color="LightYellow" Opacity="0.5" />
+              </teechart:Panel.Fill>
+              <teechart:Panel.Stroke>
+                <SolidColorBrush Color="Aquamarine" Opacity="0.5" />
+              </teechart:Panel.Stroke>
+            </teechart:Panel>
+          </teechart:TChart.Panel>
+          <series:Line StrokeThickness="10">
+            <series:Line.Stroke>
+              <SolidColorBrush Color="Firebrick" Opacity="0.5" />
+            </series:Line.Stroke>
+            <series:SeriesData Y="1000000"/>
+            <series:SeriesData Y="200000" />
+            <series:SeriesData Y="30000"/>
+            <series:SeriesData Y="4000" />
+            <series:SeriesData Y="50000" />
+            <series:SeriesData Y="600000" />
+          </series:Line>
+          <series:Points>
+            <series:Points.Pointer>
+              <series:SeriesPointer HorizSize="20" VertSize="20" StrokeThickness="5">
+                <series:SeriesPointer.Fill>
+                  <SolidColorBrush Color="AntiqueWhite" Opacity="1" />
+                </series:SeriesPointer.Fill>
+                <series:SeriesPointer.Stroke>
+                  <SolidColorBrush Color="DarkGray" Opacity="1" />
+                </series:SeriesPointer.Stroke>
+              </series:SeriesPointer>
+            </series:Points.Pointer>
+            <series:SeriesData Y="1000000"/>
+            <series:SeriesData Y="200000" />
+            <series:SeriesData Y="30000"/>
+            <series:SeriesData Y="4000" />
+            <series:SeriesData Y="50000" />
+            <series:SeriesData Y="600000" />
+          </series:Points>
+          <series:Bar BarStyle="Arrow" StrokeThickness="8">
+            <series:Bar.Fill>
+              <SolidColorBrush Color="Aquamarine" Opacity="0.5" />
+            </series:Bar.Fill>
+            <series:Bar.Stroke>
+              <SolidColorBrush Color="Pink" Opacity="0.5" />
+            </series:Bar.Stroke>
+            <series:SeriesData Y="1000000"/>
+            <series:SeriesData Y="200000" />
+            <series:SeriesData Y="30000"/>
+            <series:SeriesData Y="4000" />
+            <series:SeriesData Y="50000" />
+            <series:SeriesData Y="600000" />
+          </series:Bar>
+          <teechart:TChart.Header>
+            <teechart:Title Text="TeeChart XAML content" />
+          </teechart:TChart.Header>
+          <teechart:TChart.Legend>
+            <teechart:Legend StrokeThickness="4">
+              <teechart:Legend.Fill>
+                <SolidColorBrush Color="DarkCyan" Opacity="0.8" />
+              </teechart:Legend.Fill>
+              <teechart:Legend.Stroke>
+                <SolidColorBrush Color="LightCyan" Opacity="0.8" />
+              </teechart:Legend.Stroke>
+            </teechart:Legend>
+          </teechart:TChart.Legend>
+          <teechart:TChart.LeftAxis>
+            <teechart:LeftAxis Visible="True" AutomaticMinimum="False" Minimum="10" Logarithmic="True" StrokeThickness="4" StrokeDashArray="1,1">
+              <teechart:Axis.Stroke>
+                <SolidColorBrush Color="DarkCyan" Opacity="0.8" />
+              </teechart:Axis.Stroke>
+            </teechart:LeftAxis>
+          </teechart:TChart.LeftAxis>
+        </teechart:TChart>
+      </Grid>
+    </TabItem>
+    <TabItem Header="ColorGrid Series">
+      <teechart:TChart>
+        <teechart:TChart.Header>
+          <teechart:Title Text="ColorGrid Series XAML content" />
+        </teechart:TChart.Header>
+        <series:ColorGrid UsePalette="True" UseColorRange="False" PaletteStyle="Rainbow">
+          <series:Series3DData X="1" Y="1" Z="1" />
+          <series:Series3DData X="1" Y="2" Z="2" />
+          <series:Series3DData X="2" Y="2" Z="1" />
+          <series:Series3DData  X="2" Y="4" Z="2" />
+        </series:ColorGrid>
+      </teechart:TChart>
+    </TabItem>
+  </TabControl>
+</Window>

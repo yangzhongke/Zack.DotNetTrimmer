@@ -1,0 +1,40 @@
+<?xml version="1.0" standalone="yes"?>
+<xs:schema id="OrdersDS" targetNamespace="http://www.tempuri.org/OrdersDS.xsd" xmlns:mstns="http://www.tempuri.org/OrdersDS.xsd" xmlns="http://www.tempuri.org/OrdersDS.xsd" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" attributeFormDefault="qualified" elementFormDefault="qualified">
+  <xs:element name="OrdersDS" msdata:IsDataSet="true" msdata:Locale="es-ES">
+    <xs:complexType>
+      <xs:choice maxOccurs="unbounded">
+        <xs:element name="orders">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="OrderNo" type="xs:double" />
+              <xs:element name="CustNo" type="xs:double" minOccurs="0" />
+              <xs:element name="SaleDate" type="xs:dateTime" minOccurs="0" />
+              <xs:element name="ShipDate" type="xs:dateTime" minOccurs="0" />
+              <xs:element name="EmpNo" type="xs:int" minOccurs="0" />
+              <xs:element name="ShipToContact" type="xs:string" minOccurs="0" />
+              <xs:element name="ShipToAddr1" type="xs:string" minOccurs="0" />
+              <xs:element name="ShipToAddr2" type="xs:string" minOccurs="0" />
+              <xs:element name="ShipToCity" type="xs:string" minOccurs="0" />
+              <xs:element name="ShipToState" type="xs:string" minOccurs="0" />
+              <xs:element name="ShipToZip" type="xs:string" minOccurs="0" />
+              <xs:element name="ShipToCountry" type="xs:string" minOccurs="0" />
+              <xs:element name="ShipToPhone" type="xs:string" minOccurs="0" />
+              <xs:element name="ShipVIA" type="xs:string" minOccurs="0" />
+              <xs:element name="PO" type="xs:string" minOccurs="0" />
+              <xs:element name="Terms" type="xs:string" minOccurs="0" />
+              <xs:element name="PaymentMethod" type="xs:string" minOccurs="0" />
+              <xs:element name="ItemsTotal" type="xs:double" minOccurs="0" />
+              <xs:element name="TaxRate" type="xs:double" minOccurs="0" />
+              <xs:element name="Freight" type="xs:double" minOccurs="0" />
+              <xs:element name="AmountPaid" type="xs:double" minOccurs="0" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:choice>
+    </xs:complexType>
+    <xs:unique name="Constraint1" msdata:PrimaryKey="true">
+      <xs:selector xpath=".//mstns:orders" />
+      <xs:field xpath="mstns:OrderNo" />
+    </xs:unique>
+  </xs:element>
+</xs:schema>

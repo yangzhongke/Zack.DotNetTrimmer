@@ -1,14 +1,9 @@
-﻿using dnlib.DotNet;
-using dnlib.DotNet.Emit;
-using dnlib.DotNet.Writer;
-using Microsoft.Diagnostics.NETCore.Client;
+﻿using Microsoft.Diagnostics.NETCore.Client;
 using Microsoft.Diagnostics.Tracing;
 using Microsoft.Diagnostics.Tracing.Parsers;
-using Microsoft.Diagnostics.Tracing.Parsers.Clr;
 using System.Diagnostics;
 using System.Diagnostics.Tracing;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using static Zack.DotNetTrimmerLib.PEHelpers;
 
 namespace Zack.DotNetTrimmerLib;
@@ -102,16 +97,17 @@ public class Trimmer
         {
             throw new NotImplementedException($"Unkown mode:{options.Mode}");
         }
+
         if(options.Mode == TrimmingMode.Record)
         {
-            Console.WriteLine($"Recording completes. {options.RecordFileName}");
+            FireMessageReceived($"Recording completes. {options.RecordFileName}");
             return;
         }
         else
         {
             var allDllFiles = Directory.GetFiles(startupDir, "*.dll", SearchOption.AllDirectories)
             .Where(asmPath => !IsFileIgnored(asmPath) && IsManagedAssembly(asmPath)).ToArray();
-            var unloadedAssemblies = allDllFiles.Except(recordFileInfo.LoadedAssemblies).ToArray();
+            var unloadedAssemblies = allDllFiles.Where(d=>!recordFileInfo.LoadedAssemblies.Contains(Path.GetFileName(d)));
             var totalSize = unloadedAssemblies.Select(f => new FileInfo(f).Length).Sum() * 1.0 / (1024 * 1024);
             foreach (string asmFile in unloadedAssemblies)
             {
@@ -124,13 +120,15 @@ public class Trimmer
                     FireFileRemoved(pdbFile);
                 }
             }
-            //SlimAssemblies(recordFileInfo.LoadedAssemblies, recordFileInfo.LoadedTypes);
-
-            foreach (var file in Directory.GetFiles(startupDir, "*.deps.json"))
+            /*
+            foreach(var asmFile in recordFileInfo.LoadedAssemblies)
             {
-                TidyDeps_json(unloadedAssemblies, file);
-                FireMessageReceived($"{file} tidied up.");
-            }
+                if (!File.Exists(asmFile)) return;
+                AssemblyTrimmer.TrimAssembly(asmFile, recordFileInfo.LoadedTypes);
+            }*/
+            IOHelpers.RemoveFiles(startupDir, "*.runtimeconfig.json");
+            IOHelpers.RemoveFiles(startupDir, "*.deps.json");
+
             FireMessageReceived($"Done, reduced file size:{totalSize:0.00} MB");
             FireMessageReceived("Waiting for exit.");
             return;
@@ -140,11 +138,7 @@ public class Trimmer
     private bool RunApp(string startupFile, RecordFileInfo recordFileInfo)
     {
         string startupDir = Path.GetDirectoryName(startupFile);
-        var providers = new List<EventPipeProvider>()
-        {
-            new EventPipeProvider("Microsoft-Windows-DotNETRuntime",
-                EventLevel.Informational, (long)ClrTraceEventParser.Keywords.All)
-        };
+
         ProcessStartInfo psInfo = new ProcessStartInfo(startupFile);
         psInfo.UseShellExecute = true;
         psInfo.WorkingDirectory = startupDir;
@@ -169,63 +163,17 @@ public class Trimmer
                 FireMessageReceived($"Application shut down, waiting for to be trimmed.");
             }
         };
-
+        var providers = new List<EventPipeProvider>()
+        {
+            new EventPipeProvider("Microsoft-Windows-DotNETRuntime",
+                EventLevel.Informational, (long)ClrTraceEventParser.Keywords.All)
+        };
         var client = new DiagnosticsClient(p.Id);
         using EventPipeSession session = client.StartEventPipeSession(providers, false);
         var source = new EventPipeEventSource(session.EventStream);
         source.Clr.All += (TraceEvent obj) =>
         {
-            if (obj is KnownPathProbedTraceData)
-            {
-                var data = (KnownPathProbedTraceData)obj;
-                recordFileInfo.LoadedAssemblies.Add(data.FilePath);
-            }
-            else if (obj is ResolutionAttemptedTraceData)
-            {
-                var data = (ResolutionAttemptedTraceData)obj;
-                string asmFullPath = data.ResultAssemblyPath;
-                if (!string.IsNullOrWhiteSpace(asmFullPath))
-                {
-                    recordFileInfo.LoadedAssemblies.Add(asmFullPath);
-                }
-            }
-            else if (obj is ModuleLoadUnloadTraceData)
-            {
-                var data = (ModuleLoadUnloadTraceData)obj;
-                string asmFullPath = data.ModuleILPath;
-                if (!string.IsNullOrWhiteSpace(asmFullPath))
-                {
-                    recordFileInfo.LoadedAssemblies.Add(asmFullPath);
-                }
-            }
-            //for Linux
-            else if (obj is DomainModuleLoadUnloadTraceData)
-            {
-                var data = (DomainModuleLoadUnloadTraceData)obj;
-                string asmFullPath = data.ModuleILPath;
-                recordFileInfo.LoadedAssemblies.Add(asmFullPath);
-            }
-            else if (obj is TypeLoadStopTraceData)
-            {
-                var data = (TypeLoadStopTraceData)obj;
-                string typeName = data.TypeName;
-                recordFileInfo.LoadedTypes.Add(typeName);
-            }
-            else if (obj is GCBulkTypeTraceData)
-            {
-                var data = (GCBulkTypeTraceData)obj;
-                for (int i = 0; i < data.Count; i++)
-                {
-                    string typeName = data.Values(i).TypeName;
-                    recordFileInfo.LoadedTypes.Add(typeName);
-                }
-            }
-            /*
-            else if (obj is R2RGetEntryPointTraceData)
-            {
-                var data = (R2RGetEntryPointTraceData)obj;
-                recordFileInfo.LoadedTypes.Add(data.MethodNamespace);
-            }*/
+            TraceEventProcessor.Process(recordFileInfo, obj);
         };
         try
         {
@@ -237,117 +185,11 @@ public class Trimmer
             return false;
         }
         return true;
-    }
-
-    /// <summary>
-    /// clear the bodies of methods of unused classes in loadedAssemblies
-    /// </summary>
-    /// <param name="loadedAssemblies"></param>
-    /// <param name="loadedTypes"></param>
-    private static void SlimAssemblies(HashSet<string> loadedAssemblies, HashSet<string> loadedTypes)
-    {
-        foreach (var asmFile in loadedAssemblies)
-        {
-            if (!File.Exists(asmFile)) continue;
-            string fileName = Path.GetFileName(asmFile);
-            using var memStream = new MemoryStream();
-            using (var module = ModuleDefMD.Load(asmFile))
-            {
-                List<TypeDef> typesToBeRemoved = new List<TypeDef>();
-                foreach (var type in module.Types)
-                {
-                    if (type.IsGlobalModuleType) continue;//<Module>                    
-                                                          //struct, nested classes are not included in the report by DiagnosticsClient
-                    if (type.IsValueType) continue;//UriCreationOptions etc
-                    if (type.IsNested) continue;
-                    if (type.HasGenericParameters) continue;//generic classes may have different names as in the report by DiagnosticsClient, like A`1 and A<int>
-                    if (!loadedTypes.Contains(type.FullName))
-                    {
-                        typesToBeRemoved.Add(type);
-                    }
-                }
-                foreach (var type in typesToBeRemoved)
-                {
-                    //these methods may be referenced by others, so they cannot be removed; however, the body can be replace by 'throw null;'
-                    foreach (var method in type.Methods)
-                    {
-                        if (!method.IsManaged || method.IsConstructor || method.IsStaticConstructor || method.IsNative) continue;
-                        if (method.CustomAttributes.Any(a => a.TypeFullName == "System.Runtime.CompilerServices.ModuleInitializerAttribute")) continue;
-                        if (method.Body != null)
-                        {
-                            method.Body.ExceptionHandlers.Clear();
-                            method.Body.Instructions.Clear();
-                            method.Body.Variables.Clear();
-                            method.Body.Instructions.Add(new Instruction(OpCodes.Nop) { Offset = 0 });
-                            method.Body.Instructions.Add(new Instruction(OpCodes.Ldnull) { Offset = 1 });
-                            method.Body.Instructions.Add(new Instruction(OpCodes.Throw) { Offset = 2 });
-                        }
-                    }
-                }
-                if (module.IsILOnly)
-                {
-                    module.Write(memStream);
-                }
-                else
-                {
-                    //https://github.com/0xd4d/dnlib/issues/455#issuecomment-1067102411
-                    module.NativeWrite(memStream, new NativeModuleWriterOptions(module, true));
-                }
-            }
-            memStream.Position = 0;
-            File.WriteAllBytes(asmFile,memStream.ToArray());
-        }
-    }
+    }    
 
     static bool IsFileIgnored(string fileName)
     {
         var dirNames = Path.GetDirectoryName(fileName).Split(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
         return dirNames.Contains("_framework");//ignore files under _framework, for Blazor WebAssembly Projects.
-    }
-
-    static void FindNode(JsonObject jsonObject, string propertyName, List<JsonNode> runtimeNodes)
-    {
-        foreach (var childNode in jsonObject)
-        {
-            if (childNode.Key == propertyName&&childNode.Value!=null)
-            {
-                runtimeNodes.Add(childNode.Value);
-            }
-            else if (childNode.Value is JsonObject)
-            {
-                FindNode((JsonObject)childNode.Value, propertyName, runtimeNodes);
-            }
-        }
-    }    
-    static void TidyDeps_json(IEnumerable<string> unloadedAssemblies,string jsonFile)
-    {
-        var unloadedFileNames = new HashSet<string>(unloadedAssemblies.Select(f => Path.GetFileName(f)));
-        JsonNode jsonRoot;
-        using (FileStream inStream = File.OpenRead(jsonFile))
-        {
-            jsonRoot = JsonNode.Parse(inStream).Root;            
-        }
-        var targetsNode = jsonRoot["targets"];
-        if (targetsNode == null) return;
-        List<JsonNode> runtimeNodes = new List<JsonNode>();
-        FindNode((JsonObject)targetsNode, "runtime", runtimeNodes);
-        foreach(var runtimeNode in runtimeNodes)
-        {
-            JsonObject runtimeObject = (JsonObject)runtimeNode;
-            foreach (var runtimeItem in runtimeObject.ToArray())
-            {
-                string fileName = runtimeItem.Key;
-                if (unloadedFileNames.Contains(fileName))
-                {
-                    runtimeObject.Remove(fileName);
-                }
-            }
-        }
-        JsonWriterOptions jsonWriterOptions = new JsonWriterOptions { Indented=true};
-        using (FileStream outStream = File.Open(jsonFile,FileMode.Create,FileAccess.Write))
-        using (Utf8JsonWriter writer = new Utf8JsonWriter(outStream, jsonWriterOptions))
-        {
-            jsonRoot.WriteTo(writer);
-        }
     }
 }

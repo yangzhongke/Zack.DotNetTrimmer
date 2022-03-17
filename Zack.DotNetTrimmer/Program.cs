@@ -4,7 +4,7 @@
 
 using System.Reflection;
 using Zack.DotNetTrimmerLib;
-using static Zack.DotNetTrimmer.ConsoleHelpers;
+using static Zack.DotNetTrimmerLib.ConsoleHelpers;
 
 var asmVer = Assembly.GetExecutingAssembly().GetName().Version;
 WriteInfo($"Version:{asmVer}({Environment.OSVersion})");

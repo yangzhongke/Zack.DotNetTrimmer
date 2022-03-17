@@ -1,0 +1,24 @@
+﻿<UserControl x:Class="XamlWPFDemo.Demos.ManualValuesLabels"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:teechart="clr-namespace:TeeChart.Xaml.WPF;assembly=TeeChart.Xaml.WPF"
+             xmlns:series="clr-namespace:TeeChart.Xaml.WPF.Series;assembly=TeeChart.Xaml.WPF"
+             mc:Ignorable="d">
+  <teechart:TChart>
+    <series:Bar>
+      <series:SeriesData X="0" Y="100" Label="Hello" />
+    </series:Bar>
+    <series:Bar>
+      <series:SeriesData Y="50" Label="Lorem" />
+      <series:SeriesData Y="25" Label="Ipsum" />
+      <series:SeriesData Y="12" Label="Dolor" />
+      <series:SeriesData Y="25" Label="Sit" />
+      <series:SeriesData Y="50" Label="Amet" />
+    </series:Bar>
+    <series:Bar>
+      <series:SeriesData X="4" Y="100" Label="World!" />
+    </series:Bar>
+  </teechart:TChart>
+</UserControl>

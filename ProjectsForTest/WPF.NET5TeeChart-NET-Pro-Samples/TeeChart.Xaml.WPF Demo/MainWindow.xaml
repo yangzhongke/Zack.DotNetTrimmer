@@ -1,0 +1,41 @@
+﻿<Window x:Class="XamlWPFDemo.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:avalonedit="http://icsharpcode.net/sharpdevelop/avalonedit"
+        mc:Ignorable="d"
+        Title="TeeChart.Xaml.WPF Demo" Width="1280" Height="720"
+        DataContext="{Binding Main, Source={StaticResource Locator}}">
+  <Window.Resources>
+    <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+  </Window.Resources>
+  <Grid>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="Auto" />
+      <ColumnDefinition Width="*" />
+    </Grid.ColumnDefinitions>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+    <ListBox Grid.Column="0" Grid.RowSpan="3" ItemsSource="{Binding Demos}"
+             SelectedItem="{Binding SelectedDemo, Mode=TwoWay}" />
+    <ContentControl Grid.Column="1" Grid.Row="0" Content="{Binding DemoControl}" Margin="1" />
+    <GridSplitter Grid.Column="1" Grid.Row="1" Height="5" HorizontalAlignment="Stretch" />
+    <DockPanel Grid.Column="1" Grid.Row="2">
+      <ListBox DockPanel.Dock="Right" ItemsSource="{Binding SelectedDemo.Value}"
+               SelectedItem="{Binding File, Mode=TwoWay}"
+               Visibility="{Binding FileSelectVisible, Converter={StaticResource BooleanToVisibilityConverter}}" />
+      <avalonedit:TextEditor SyntaxHighlighting="C#" x:Name="CodeEditor" FontFamily="Consolas" FontSize="10pt"
+                             IsReadOnly="True">
+        <avalonedit:TextEditor.ContextMenu>
+          <ContextMenu>
+            <MenuItem Header="Copy" Command="Copy" />
+          </ContextMenu>
+        </avalonedit:TextEditor.ContextMenu>
+      </avalonedit:TextEditor>
+    </DockPanel>
+  </Grid>
+</Window>
