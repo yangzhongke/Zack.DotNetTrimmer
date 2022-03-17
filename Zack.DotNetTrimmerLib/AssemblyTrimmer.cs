@@ -1,5 +1,4 @@
 ﻿using dnlib.DotNet;
-using dnlib.DotNet.MD;
 
 namespace Zack.DotNetTrimmerLib
 {
@@ -12,7 +11,7 @@ namespace Zack.DotNetTrimmerLib
                 if (PEHelpers.IsManagedAssembly(asmFile))
                 {
                     TrimAssembly(asmFile, loadedTypes);
-                }                
+                }
             }
         }
 
@@ -28,7 +27,11 @@ namespace Zack.DotNetTrimmerLib
             {
                 //Assembly contains more than IL code cannot be trimmed as expected.
                 //https://github.com/Washi1337/AsmResolver/issues/267
-                if (!module.IsILOnly) return;
+                if (!module.IsILOnly)
+                {
+                    ConsoleHelpers.WriteInfo($"{asmFile} is not ILOnly, skipped.");
+                    return;
+                }
                 List<TypeDef> typesToBeRemoved = new List<TypeDef>();
                 foreach (var type in module.Types)
                 {
@@ -56,6 +59,7 @@ namespace Zack.DotNetTrimmerLib
             }
             memStream.Position = 0;
             File.WriteAllBytes(asmFile, memStream.ToArray());
+            ConsoleHelpers.WriteInfo($"Unused codes of {asmFile} are trimmed.");
         }
     }
 }

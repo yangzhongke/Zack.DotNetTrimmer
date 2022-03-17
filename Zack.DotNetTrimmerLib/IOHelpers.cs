@@ -8,7 +8,14 @@
             foreach (var file in files)
             {
                 File.Delete(file);
+                ConsoleHelpers.WriteInfo($"{file} removed.");
             }
+        }
+
+        public static long GetFolderSize(string dir)
+        {
+            var files = Directory.GetFiles(dir, "*.*", SearchOption.AllDirectories);
+            return files.Sum(f => new FileInfo(f).Length);
         }
     }
 }
