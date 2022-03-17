@@ -1,9 +1,21 @@
 ﻿using dnlib.DotNet;
+using dnlib.DotNet.MD;
 
 namespace Zack.DotNetTrimmerLib
 {
     static class AssemblyTrimmer
     {
+        public static void TrimAssemblies(string rootDir, HashSet<string> loadedTypes)
+        {
+            foreach (var asmFile in Directory.GetFiles(rootDir, "*.dll", SearchOption.AllDirectories))
+            {
+                if (PEHelpers.IsManagedAssembly(asmFile))
+                {
+                    TrimAssembly(asmFile, loadedTypes);
+                }                
+            }
+        }
+
         /// <summary>
         /// clear the bodies of methods of unused classes in loadedAssemblies
         /// </summary>
@@ -17,7 +29,6 @@ namespace Zack.DotNetTrimmerLib
                 //Assembly contains more than IL code cannot be trimmed as expected.
                 //https://github.com/Washi1337/AsmResolver/issues/267
                 if (!module.IsILOnly) return;
-
                 List<TypeDef> typesToBeRemoved = new List<TypeDef>();
                 foreach (var type in module.Types)
                 {
@@ -40,6 +51,7 @@ namespace Zack.DotNetTrimmerLib
                     }
                 }
                 //if module.IsILOnly, NativeWrite should be used instead of Write
+                //module.Write(memStream);
                 module.Write(memStream);
             }
             memStream.Position = 0;

@@ -108,17 +108,11 @@ public class Trimmer
             .Where(asmPath => !IsFileIgnored(asmPath) && IsManagedAssembly(asmPath)).ToArray();
             var assembliesNotLoaded = allDllFiles.Where(d => !recordFileInfo.LoadedAssemblies.Contains(Path.GetFileName(d)));
             var totalSize = assembliesNotLoaded.Select(f => new FileInfo(f).Length).Sum() * 1.0 / (1024 * 1024);
-
-            /*
-            foreach(var asmFile in recordFileInfo.LoadedAssemblies)
-            {
-                if (!File.Exists(asmFile)) return;
-                AssemblyTrimmer.TrimAssembly(asmFile, recordFileInfo.LoadedTypes);
-            }*/
             foreach (var file in assembliesNotLoaded)
             {
                 File.Delete(file);
             }
+            AssemblyTrimmer.TrimAssemblies(startupDir, recordFileInfo.LoadedTypes);
             IOHelpers.RemoveFiles(startupDir, "*.pdb");
             IOHelpers.RemoveFiles(startupDir, "*.runtimeconfig.json");
             IOHelpers.RemoveFiles(startupDir, "*.deps.json");
