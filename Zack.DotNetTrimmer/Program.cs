@@ -18,15 +18,15 @@ if (args.Length <= 0)
 }
 //--record d:/1.json
 //--apply d:/1.json
-string firstParameter =args[0];
-string? recordFileName=null;
+string firstParameter = args[0];
+string? recordFileName = null;
 
 string startupFile;
 string[] arguments;
 TrimmingMode mode;
 if (firstParameter.StartsWith("--"))
 {
-    if(firstParameter== "--record")
+    if (firstParameter == "--record")
     {
         mode = TrimmingMode.Record;
     }
@@ -56,29 +56,22 @@ if (!Path.IsPathRooted(startupFile))
     return;
 }
 
-if (PEHelpers.IsManagedAssembly(startupFile))
+if (PEHelpers.IsNetFrameworkApp(startupFile))
 {
-    //if the file is based on .NET Framework
-    var moduleDef = AsmResolver.DotNet.ModuleDefinition.FromFile(startupFile);
-    if (moduleDef.OriginalTargetRuntime.Name == ".NETFramework")
-    {
-        WriteError("Error: Application based on .NET Framework isn't supported, only .NET Core Application is.");
-        return;
-    }
+    WriteError("Error: Application based on .NET Framework isn't supported, only .NET Core Application is.");
+    return;
 }
-else
+if (!PEHelpers.IsSelfContainedApp(startupFile))
 {
-    string dir = Path.GetDirectoryName(startupFile);
-    string dllFileName = Path.GetFileNameWithoutExtension(startupFile)+".dll";
-    string dllFileFullPath = Path.Combine(dir, dllFileName);
-    if(!File.Exists(dllFileFullPath))
-    {
-        WriteWarning($"Warning! It looks like {Path.GetFileName(startupFile)} is generated using 'Produce single file', which is not supported. ");
-    }
+    WriteError("Error: Only self-contained applications are supported, and framework-dependent ones aren't.");
+    return;
 }
-
+if (PEHelpers.IsBuiltWithProduce_SingleFile(startupFile))
+{
+    WriteWarning($"Warning! It looks like {Path.GetFileName(startupFile)} is generated using 'Produce single file', which is not supported. ");
+}
 string backupDir = BackupHelper.BackupProject(startupFile);
-TimmerOptions cmdOpts = new TimmerOptions { Mode=mode, RecordFileName= recordFileName, StartupFile = startupFile, Arguments = arguments };
+TimmerOptions cmdOpts = new TimmerOptions { Mode = mode, RecordFileName = recordFileName, StartupFile = startupFile, Arguments = arguments };
 Trimmer trimmer = new Trimmer(cmdOpts);
 trimmer.MessageReceived += (s, e) =>
 {
@@ -89,7 +82,7 @@ trimmer.FileRemoved += (s, e) =>
     WriteInfo($"File removed:{e.FileFullPath}");
 };
 trimmer.Run();
-if(mode== TrimmingMode.Apply||mode== TrimmingMode.Direct)
+if (mode == TrimmingMode.Apply || mode == TrimmingMode.Direct)
 {
     WriteInfo($"Original files have been backup into {backupDir}");
 }

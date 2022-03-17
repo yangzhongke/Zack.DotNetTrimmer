@@ -34,4 +34,32 @@ public static class PEHelpers
             method.Body.Instructions.Add(new Instruction(OpCodes.Throw) { Offset = 2 });
         }
     }
+
+    public static bool IsNetFrameworkApp(string startupFile)
+    {
+        if (!IsManagedAssembly(startupFile))
+        {
+            return false;
+        }
+        var moduleDef = AsmResolver.DotNet.ModuleDefinition.FromFile(startupFile);
+        return moduleDef.OriginalTargetRuntime.Name == ".NETFramework";
+    }
+
+    public static bool IsSelfContainedApp(string startupFile)
+    {
+        string startupDir = Path.GetDirectoryName(startupFile);
+        var dllFiles = Directory.GetFiles(startupDir, "*.dll").Select(f => Path.GetFileName(f));
+        var clrFiles = new string[] { "netstandard.dll", "coreclr.dll", "clrjit.dll", "System.Private.CoreLib.dll", "System.Core.dll" };
+        //check whether dllFiles contains at least one elements of clrFiles
+        return dllFiles.Intersect(clrFiles).Any();
+    }
+
+    public static bool IsBuiltWithProduce_SingleFile(string startupFile)
+    {
+        string dir = Path.GetDirectoryName(startupFile);
+        string dllFileName = Path.GetFileNameWithoutExtension(startupFile) + ".dll";
+        string dllFileFullPath = Path.Combine(dir, dllFileName);
+        return !File.Exists(dllFileFullPath);
+    }
+
 }

@@ -52,10 +52,10 @@ public class Trimmer
             startupDir = dir;
         }
         RecordFileInfo recordFileInfo;
-        if(options.Mode== TrimmingMode.Record)
+        if (options.Mode == TrimmingMode.Record)
         {
             string recordFileName = options.RecordFileName;
-            if(File.Exists(recordFileName))
+            if (File.Exists(recordFileName))
             {
                 using FileStream fileStream = File.OpenRead(recordFileName);
                 recordFileInfo = JsonSerializer.Deserialize<RecordFileInfo>(fileStream);
@@ -70,8 +70,8 @@ public class Trimmer
             }
             else
             {
-                JsonSerializerOptions jsonOpt = new() { WriteIndented=true};
-                using FileStream fileStream = File.Open(recordFileName,FileMode.Create);
+                JsonSerializerOptions jsonOpt = new() { WriteIndented = true };
+                using FileStream fileStream = File.Open(recordFileName, FileMode.Create);
                 JsonSerializer.Serialize(fileStream, recordFileInfo, jsonOpt);
             }
         }
@@ -98,41 +98,34 @@ public class Trimmer
             throw new NotImplementedException($"Unkown mode:{options.Mode}");
         }
 
-        if(options.Mode == TrimmingMode.Record)
+        if (options.Mode == TrimmingMode.Record)
         {
             FireMessageReceived($"Recording completes. {options.RecordFileName}");
-            return;
         }
         else
         {
             var allDllFiles = Directory.GetFiles(startupDir, "*.dll", SearchOption.AllDirectories)
             .Where(asmPath => !IsFileIgnored(asmPath) && IsManagedAssembly(asmPath)).ToArray();
-            var unloadedAssemblies = allDllFiles.Where(d=>!recordFileInfo.LoadedAssemblies.Contains(Path.GetFileName(d)));
-            var totalSize = unloadedAssemblies.Select(f => new FileInfo(f).Length).Sum() * 1.0 / (1024 * 1024);
-            foreach (string asmFile in unloadedAssemblies)
-            {
-                File.Delete(asmFile);
-                FireFileRemoved(asmFile);
-                string pdbFile = Path.ChangeExtension(asmFile, ".pdb");
-                if (File.Exists(pdbFile))//delete related pdb files
-                {
-                    File.Delete(pdbFile);
-                    FireFileRemoved(pdbFile);
-                }
-            }
+            var assembliesNotLoaded = allDllFiles.Where(d => !recordFileInfo.LoadedAssemblies.Contains(Path.GetFileName(d)));
+            var totalSize = assembliesNotLoaded.Select(f => new FileInfo(f).Length).Sum() * 1.0 / (1024 * 1024);
+
             /*
             foreach(var asmFile in recordFileInfo.LoadedAssemblies)
             {
                 if (!File.Exists(asmFile)) return;
                 AssemblyTrimmer.TrimAssembly(asmFile, recordFileInfo.LoadedTypes);
             }*/
+            foreach (var file in assembliesNotLoaded)
+            {
+                File.Delete(file);
+            }
+            IOHelpers.RemoveFiles(startupDir, "*.pdb");
             IOHelpers.RemoveFiles(startupDir, "*.runtimeconfig.json");
             IOHelpers.RemoveFiles(startupDir, "*.deps.json");
 
             FireMessageReceived($"Done, reduced file size:{totalSize:0.00} MB");
             FireMessageReceived("Waiting for exit.");
-            return;
-        }        
+        }
     }
 
     private bool RunApp(string startupFile, RecordFileInfo recordFileInfo)
@@ -185,7 +178,7 @@ public class Trimmer
             return false;
         }
         return true;
-    }    
+    }
 
     static bool IsFileIgnored(string fileName)
     {

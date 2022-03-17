@@ -10,7 +10,7 @@ namespace Zack.DotNetTrimmerLib
         /// <param name="loadedAssemblies"></param>
         /// <param name="loadedTypes"></param>
         public static void TrimAssembly(string asmFile, HashSet<string> loadedTypes)
-        {           
+        {
             using var memStream = new MemoryStream();
             using (var module = ModuleDefMD.Load(asmFile))
             {
