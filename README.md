@@ -21,7 +21,7 @@ Comparison of trimming：
 How to：
 1) Download the Zack.DotNetTrimmer executable and unzip the program to disk, [Download](https://github.com/yangzhongke/Zack.DotNetTrimmer/releases)
 
-2) Publish the project to be trimmed, please use the ** 'self-contained'**  as deployment mode . Do not select **Produce single file**  or 'Framework-dependent' deployment mode.
+2) Publish the project to be trimmed, please use the **self-contained**  as deployment mode . Do not select **Produce single file**  or 'Framework-dependent' deployment mode.
 3) Run DotNetTrimmer on the command line and pass the **full path** of the program to be trimmed as the parameter of --file. For example:  
 
 ```
@@ -29,6 +29,9 @@ Zack.DotNetTrimmer.exe --file d:\a\ASPNETCore6WebAPI1.exe
 ```
 
 After running, Zack.DotNetTrimmer will start as a console program, and the program to be trimmed will start automatically.  
+
+Note: If the full path contains special characters such as Spaces, please enclose them in double quotation marks, for example: --file "d:/a  b/1.exe"
+
 
 4)  Execute all functions in the program to be trimmed, covering all code paths.  After completing all functions, press Ctrl+C or Ctrl+Break in the Zack.DotNetTrimmer console to send a shutdown request for the program to be trimmed. Zack.DotNetTrimmer analyzes and trim the program . When trimming is complete, "Timming done." will be shown.  
 
@@ -67,8 +70,6 @@ Zack.DotNetTrimmer.exe --greedy --file d:\a\ASPNETCore6WebAPI1.exe
 ```
 
 However, this requires a more thorough test of all the running paths of the program, or it may cause the program to crash when it runs on something that is not being tested.  
-
-Note: If the full path contains special characters such as Spaces, please enclose them in double quotation marks, for example: --file "d:/a  b/1.exe"
 
 Q4)Can a program run multiple times before it's trimmed?  
 
