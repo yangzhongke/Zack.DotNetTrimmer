@@ -7,7 +7,6 @@
 	  <Nullable>enable</Nullable>
   </PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="AsmResolver.DotNet" Version="4.9.0" />
 		<PackageReference Include="Microsoft.Diagnostics.NETCore.Client" Version="0.2.257301" />
 		<PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="2.0.74" />
 		<PackageReference Include="System.Reflection.Metadata" Version="6.0.0" />

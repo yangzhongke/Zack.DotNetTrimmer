@@ -2,7 +2,7 @@
   "profiles": {
     "配置文件 1": {
       "commandName": "Project",
-      "commandLineArgs": "--file  \"E:\\主同步盘\\我的坚果云\\MyCode\\DOTNET\\Zack.DotNetTrimmer\\ProjectsForTest\\WinForm.NET5TeeChart-NET-Pro-Samples\\bin\\publish\\TeeChart Examples.exe\" --urls=http://localhost:5000/"
+      "commandLineArgs": " --record 1.json --file E:\\temp\\winformFX1\\winformFX1\\bin\\Debug\\winformFX1.exe"
     }
   }
 }

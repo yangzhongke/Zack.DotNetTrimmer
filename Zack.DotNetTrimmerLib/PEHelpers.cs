@@ -41,8 +41,10 @@ public static class PEHelpers
         {
             return false;
         }
-        var moduleDef = AsmResolver.DotNet.ModuleDefinition.FromFile(startupFile);
-        return moduleDef.OriginalTargetRuntime.Name == ".NETFramework";
+        using (var module = ModuleDefMD.Load(startupFile))
+        {
+            return module.RuntimeVersion.StartsWith("v4.");
+        }
     }
 
     public static bool IsSelfContainedApp(string startupFile)
