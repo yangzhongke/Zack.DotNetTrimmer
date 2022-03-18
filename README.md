@@ -18,7 +18,7 @@ Comparison of trimming：
 
 
 
-How to：
+# How to：
 1) Download the Zack.DotNetTrimmer executable and unzip the program to disk, [Download](https://github.com/yangzhongke/Zack.DotNetTrimmer/releases)
 
 2) Publish the project to be trimmed, please use the **self-contained**  as deployment mode . Do not select **Produce single file**  or 'Framework-dependent' deployment mode.
@@ -39,9 +39,9 @@ So the program is clipped. As shown below:
 
 ![Result](https://raw.githubusercontent.com/yangzhongke/Zack.DotNetTrimmer/main/images/1.png)
 
-Advanced usage：
+# Advanced usage：
 
-Q1) How do I pass command-line arguments to the program to be trimmed?
+## Q1) How do I pass command-line arguments to the program to be trimmed?
 
 Answer:
 
@@ -49,13 +49,13 @@ Answer:
 Zack.DotNetTrimmer.exe --file d:\a\ASPNETCore6WebAPI1.exe --urls=http://localhost:8888/
 ```
 
-Q2) How to restore the deleted files?
+## Q2) How to restore the deleted files?
 
 Answer:
 
 Before it exits, it will prompt the backup path, please go to that path to get the backup version. 
 
-Q3) Can I reduce the file size further?
+## Q3) Can I reduce the file size further?
 
 Answer:
 
@@ -71,7 +71,7 @@ Zack.DotNetTrimmer.exe --greedy --file d:\a\ASPNETCore6WebAPI1.exe
 
 However, this requires a more thorough test of all the running paths of the program, or it may cause the program to crash when it runs on something that is not being tested.  
 
-Q4)Can a program run multiple times before it's trimmed?  
+## Q4)Can a program run multiple times before it's trimmed?  
 
 Answer:
 
@@ -93,7 +93,7 @@ Apply mode uses --apply parameter to enable, and need to take the JSON file path
 
 In Apply mode, we can still use the --greedy parameter.
 
-Q5)Can I record information about the program to be trimmed and repeat the trimming in an automated build multiple times?  
+## Q5)Can I record information about the program to be trimmed and repeat the trimming in an automated build multiple times?  
 
 Answer:
 

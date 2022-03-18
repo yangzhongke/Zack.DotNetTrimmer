@@ -18,7 +18,7 @@ Zack.DotNetTrimmer则可以解决这些问题，它 **支持Windows Forms和WPF*
 |空WinForms项目| 152 MB |  不支持    | 50.0 MB          |
 
 
-用法：
+# 用法：
 1) 下载Zack.DotNetTrimmer的可执行程序，并且解压程序到磁盘，[前往下载](https://github.com/yangzhongke/Zack.DotNetTrimmer/releases)
 
 
@@ -40,8 +40,8 @@ Zack.DotNetTrimmer.exe --file d:\a\ASPNETCore6WebAPI1.exe
 
 ![程序剪裁结果](https://raw.githubusercontent.com/yangzhongke/Zack.DotNetTrimmer/main/images/1.png)
 
-高级用法：
-1) 如何给待裁剪程序传递命令行参数？
+# 高级用法：
+## 1) 如何给待裁剪程序传递命令行参数？
 
 把参数继续放到待裁剪的程序的全路径后即可，比如
 
@@ -49,11 +49,11 @@ Zack.DotNetTrimmer.exe --file d:\a\ASPNETCore6WebAPI1.exe
 Zack.DotNetTrimmer.exe --file d:\a\ASPNETCore6WebAPI1.exe --urls=http://localhost:8888/
 ```
 
-2) 如何恢复被删除的文件？
+## 2) 如何恢复被删除的文件？
 
 Zack.DotNetTrimmer退出前，会提示备份路径，请去那个路径获取裁剪前的备份版本。
 
-3) 我能进一步缩小文件尺寸吗？
+## 3) 我能进一步缩小文件尺寸吗？
 
 这个程序使用DiagnosticsClient检查.NET Core程序运行中加载的所有的程序集，这样就知道哪些程序集没有被使用了。默认情况下，程序只会删除掉没有被使用的程序集。
 
@@ -67,7 +67,7 @@ Zack.DotNetTrimmer.exe --greedy --file d:\a\ASPNETCore6WebAPI1.exe
 
 不过，这要求对程序运行过程中所有的运行路径进行更全面的测试，否则可能会导致程序运行到某些没有被测试到的功能的时候崩溃。
 
-4) 可以多次运行被裁剪的程序，然后最后统一进行裁剪吗？
+## 4) 可以多次运行被裁剪的程序，然后最后统一进行裁剪吗？
 
 默认情况下，本程序会在被裁剪的程序退出后立即进行程序的裁剪。但是，在比较复杂的项目中，我们可能需要多次以不同的环境运行被裁剪的程序，以便于全面覆盖代码的运行路径，最后再统一进行裁剪。
 
@@ -87,6 +87,6 @@ Zack.DotNetTrimmer.exe --greedy --file d:\a\ASPNETCore6WebAPI1.exe
 
 在apply模式下，我们仍然可以使用--greedy参数。
 
-5）我可以录制下来待裁剪的程序信息，然后在自动构建中重复执行裁剪吗？
+## 5）我可以录制下来待裁剪的程序信息，然后在自动构建中重复执行裁剪吗？
 
 支持，用上面提到的【录制】模式(--record)进行录制，然后复用录制的json文件，重复执行【应用】(--apply)模式即可。
