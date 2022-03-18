@@ -100,7 +100,9 @@ public class Trimmer
             IOHelpers.RemoveFiles(startupDir, "*.deps.json");
             long sizeAfter = IOHelpers.GetFolderSize(startupDir);
             double sizeReduced = (sizeBefore - sizeAfter) * 1.0 / (1024 * 1024);
-            WriteInfo($"Done! size before: {sizeBefore * 1.0 / (1024 * 1024):0.00} MB, size after:{sizeAfter * 1.0 / (1024 * 1024):0.00} MB reduced size:{sizeReduced:0.00} MB");
+            WriteInfo($"Done! ");
+            WriteInfo($"Size before: {sizeBefore * 1.0 / (1024 * 1024):0.00} MB, size after:{sizeAfter * 1.0 / (1024 * 1024):0.00} MB.");
+            WriteInfo($"Reduced size:{sizeReduced:0.00} MB");
             WriteInfo("Waiting for exit.");
         }
     }

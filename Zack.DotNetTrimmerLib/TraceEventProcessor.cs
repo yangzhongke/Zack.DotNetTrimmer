@@ -1,5 +1,6 @@
 ﻿using Microsoft.Diagnostics.Tracing;
 using Microsoft.Diagnostics.Tracing.Parsers.Clr;
+using System.Diagnostics;
 using System.Reflection;
 
 namespace Zack.DotNetTrimmerLib

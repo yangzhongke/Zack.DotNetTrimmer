@@ -26,6 +26,14 @@ if (!Path.IsPathRooted(startupFile))
     return;
 }
 
+if(!File.Exists(startupFile))
+{
+    WriteError($"Error: File not found:{startupFile}");
+    WriteError("If the filepath contains whitespaces or other special characters, please use double quotation marks around it.");
+    PrintUsage();
+    return;
+}
+
 if (PEHelpers.IsNetFrameworkApp(startupFile))
 {
     WriteError("Error: Application based on .NET Framework isn't supported, only .NET Core Application is.");
@@ -40,6 +48,17 @@ if (PEHelpers.IsBuiltWithProduce_SingleFile(startupFile))
 {
     WriteWarning($"Warning! It looks like {Path.GetFileName(startupFile)} is generated using 'Produce single file', which is not supported. ");
 }
+if(options.Mode == TrimmingMode.Apply)
+{
+    if(!File.Exists(options.RecordFileName))
+    {
+        WriteError($"Error: File not found:{options.RecordFileName}");
+        WriteError("If the filepath contains whitespaces or other special characters, please use double quotation marks around it.");
+        PrintUsage();
+        return;
+    }
+}
+
 string backupDir = BackupHelper.BackupProject(startupFile);
 Trimmer trimmer = new Trimmer(options);
 trimmer.Run();
@@ -52,5 +71,6 @@ void PrintUsage()
     WriteInfo("--record d:/1.json --greedy --file d:/1.exe a b");
     WriteInfo("--greedy --file d:/1.exe  a b");
     WriteInfo("--file d:/1.exe ");
+    WriteInfo("--file \"d:/a  b/1.exe\" ");
     WriteInfo("--apply d:/1.json --greedy --file d:/1.exe");
 }

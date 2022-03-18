@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net5.0</TargetFramework>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <PackAsTool>true</PackAsTool>
+        <ToolCommandName>dotnet-snow</ToolCommandName>
+        <AssemblyName>dotnet-snow</AssemblyName>
+        <Version>1.0.1</Version>
+        <Description>.NET Core Global Tool: cross-platform Avalonia-based GUI Snow demo</Description>
+        <PackageTags>dotnet, global tools, snow, demo, avalonia, avaloniaui, wpf, xaml</PackageTags>
+        <RepositoryUrl>https://github.com/ptupitsyn/let-it-snow.git</RepositoryUrl>
+        <PackageProjectUrl>https://github.com/ptupitsyn/let-it-snow</PackageProjectUrl>
+        <PackageIconUrl>https://raw.githubusercontent.com/ptupitsyn/let-it-snow/master/images/package-icon.png</PackageIconUrl>
+    </PropertyGroup>
+    <ItemGroup>
+        <Compile Update="**\*.xaml.cs">
+            <DependentUpon>%(Filename)</DependentUpon>
+        </Compile>
+        <EmbeddedResource Include="**\*.xaml">
+            <SubType>Designer</SubType>
+        </EmbeddedResource>
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Avalonia" Version="0.9.1" />
+        <PackageReference Include="Avalonia.Desktop" Version="0.9.1" />
+        <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-beta0005" />
+    </ItemGroup>
+</Project>
