@@ -56,8 +56,10 @@ Q3) Can I reduce the file size further?
 
 Answer:
 
-This program uses DiagnosticsClient to check all the assemblies loaded at runtime, so that it knows which assemblies are not being used.  By default, only unused assemblies are deleted.  
+This program uses DiagnosticsClient to check all the assemblies loaded at runtime, so that it knows which assemblies are not being used.  By default, only unused assemblies are deleted. 
+ 
 If the --greedy parameter is used, the program also clear the method bodies of unsed classes in the used assemblies, further reducing the file size.  
+
 Usage:
 
 ```
@@ -66,12 +68,16 @@ Zack.DotNetTrimmer.exe --greedy --file d:\a\ASPNETCore6WebAPI1.exe
 
 However, this requires a more thorough test of all the running paths of the program, or it may cause the program to crash when it runs on something that is not being tested.  
 
+Note: If the full path contains special characters such as Spaces, please enclose them in double quotation marks, for example: --file "d:/a  b/1.exe"
+
 Q4)Can a program run multiple times before it's trimmed?  
 
 Answer:
 
 By default, this program will trim the program as soon as the clipped program exits.  On more complex projects, however, you may need to run the program multiple times in different environments to cover the entire path of the code before trimming it.  
+
 The program supports two modes: Record and Apply. In Record mode, the program will record the running information of the program to a JSON file. If the JSON file already exists, the program will append the information to the JSON file.  
+
 After we run the program to be trimmed in Record mode for many times, we run the program with the Apply model again and specify the JSON file recorded previously. The program will trim the program according to the recorded JSON file.  
 
 Record mode uses --record parameter to enable, and need to take the JSON file path as the parameter value, for example:  
@@ -87,5 +93,7 @@ Apply mode uses --apply parameter to enable, and need to take the JSON file path
 In Apply mode, we can still use the --greedy parameter.
 
 Q5)Can I record information about the program to be trimmed and repeat the trimming in an automated build multiple times?  
+
 Answer:
+
 Yes. Please use the --record mode mentioned above, then reuse the recorded JSON file with --apply during building.  
