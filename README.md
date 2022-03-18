@@ -19,23 +19,13 @@ Comparison of trimming：
 
 
 How to：
-1) Download the Zack.DotNetTrimmer executable and unzip the program to disk  
+1) Download the Zack.DotNetTrimmer executable and unzip the program to disk, [Download](https://github.com/yangzhongke/Zack.DotNetTrimmer/releases)
 
-[windows x86](https://github.com/yangzhongke/Zack.DotNetTrimmer/raw/main/Binaries/windowsx86.zip)
-
-
-[windows x64](https://github.com/yangzhongke/Zack.DotNetTrimmer/raw/main/Binaries/windowsx64.zip)
-
-
-[linux x64](https://github.com/yangzhongke/Zack.DotNetTrimmer/raw/main/Binaries/linux_x64.zip)
-
-[osx x64](https://github.com/yangzhongke/Zack.DotNetTrimmer/raw/main/Binaries/osx-x64.zip)
-
-2) Publish the project to be trimmed. Do not select **Produce single file** .
-3) Run DotNetTrimmer on the command line and pass the **full path** of the program to be trimmed as the parameter. For example:  
+2) Publish the project to be trimmed, please use the ** 'self-contained'**  as deployment mode . Do not select **Produce single file**  or 'Framework-dependent' deployment mode.
+3) Run DotNetTrimmer on the command line and pass the **full path** of the program to be trimmed as the parameter of --file. For example:  
 
 ```
-Zack.DotNetTrimmer.exe d:\a\ASPNETCore6WebAPI1.exe
+Zack.DotNetTrimmer.exe --file d:\a\ASPNETCore6WebAPI1.exe
 ```
 
 After running, Zack.DotNetTrimmer will start as a console program, and the program to be trimmed will start automatically.  
@@ -46,14 +36,14 @@ So the program is clipped. As shown below:
 
 ![Result](https://raw.githubusercontent.com/yangzhongke/Zack.DotNetTrimmer/main/images/1.png)
 
-FAQ：
+Advanced usage：
 
 Q1) How do I pass command-line arguments to the program to be trimmed?
 
 Answer:
 
 ```
-Zack.DotNetTrimmer.exe d:\a\ASPNETCore6WebAPI1.exe --urls=http://localhost:8888/
+Zack.DotNetTrimmer.exe --file d:\a\ASPNETCore6WebAPI1.exe --urls=http://localhost:8888/
 ```
 
 Q2) How to restore the deleted files?
@@ -61,3 +51,41 @@ Q2) How to restore the deleted files?
 Answer:
 
 Before it exits, it will prompt the backup path, please go to that path to get the backup version. 
+
+Q3) Can I reduce the file size further?
+
+Answer:
+
+This program uses DiagnosticsClient to check all the assemblies loaded at runtime, so that it knows which assemblies are not being used.  By default, only unused assemblies are deleted.  
+If the --greedy parameter is used, the program also clear the method bodies of unsed classes in the used assemblies, further reducing the file size.  
+Usage:
+
+```
+Zack.DotNetTrimmer.exe --greedy --file d:\a\ASPNETCore6WebAPI1.exe
+```
+
+However, this requires a more thorough test of all the running paths of the program, or it may cause the program to crash when it runs on something that is not being tested.  
+
+Q4)Can a program run multiple times before it's trimmed?  
+
+Answer:
+
+By default, this program will trim the program as soon as the clipped program exits.  On more complex projects, however, you may need to run the program multiple times in different environments to cover the entire path of the code before trimming it.  
+The program supports two modes: Record and Apply. In Record mode, the program will record the running information of the program to a JSON file. If the JSON file already exists, the program will append the information to the JSON file.  
+After we run the program to be trimmed in Record mode for many times, we run the program with the Apply model again and specify the JSON file recorded previously. The program will trim the program according to the recorded JSON file.  
+
+Record mode uses --record parameter to enable, and need to take the JSON file path as the parameter value, for example:  
+```
+--record d:/1.json --file d:/1.exe
+```
+
+Apply mode uses --apply parameter to enable, and need to take the JSON file path as the parameter value, for example:  
+```
+--apply d:/1.json --file d:/1.exe
+```
+
+In Apply mode, we can still use the --greedy parameter.
+
+Q5)Can I record information about the program to be trimmed and repeat the trimming in an automated build multiple times?  
+Answer:
+Yes. Please use the --record mode mentioned above, then reuse the recorded JSON file with --apply during building.  

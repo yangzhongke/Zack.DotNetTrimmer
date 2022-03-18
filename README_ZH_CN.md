@@ -22,7 +22,7 @@ Zack.DotNetTrimmer则可以解决这些问题，它 **支持Windows Forms和WPF*
 1) 下载Zack.DotNetTrimmer的可执行程序，并且解压程序到磁盘，[前往下载](https://github.com/yangzhongke/Zack.DotNetTrimmer/releases)
 
 
-2) 发布待裁剪的项目，部署模式请选择【独立】。请勿勾选 **【生成单个文件】**，请勿使用【依赖框架】的部署模式。
+2) 发布待裁剪的项目，**部署模式请选择【独立】** 。请勿勾选 **【生成单个文件】**，请勿使用【依赖框架】的部署模式。
 3) 在命令行中运行Zack.DotNetTrimmer，把待裁剪的程序的 **全路径** 做为--file参数传递给Zack.DotNetTrimmer。比如：
 
 ```
@@ -49,7 +49,7 @@ Zack.DotNetTrimmer.exe --file d:\a\ASPNETCore6WebAPI1.exe --urls=http://localhos
 2) 如何恢复被删除的文件？
 Zack.DotNetTrimmer退出前，会提示备份路径，请去那个路径获取裁剪前的备份版本。
 
-3) 能进一步缩小文件尺寸吗？
+3) 我能进一步缩小文件尺寸吗？
 这个程序使用DiagnosticsClient检查.NET Core程序运行中加载的所有的程序集，这样就知道哪些程序集没有被使用了。默认情况下，程序只会删除掉没有被使用的程序集。
 如果启用了--greedy参数，则程序还会把程序集中没有被使用的类的方法体清空，这样就可以进一步缩小文件的尺寸。
 用法如下：
@@ -76,7 +76,7 @@ Zack.DotNetTrimmer.exe --greedy --file d:\a\ASPNETCore6WebAPI1.exe
 --apply d:/1.json --file d:/1.exe
 ```
 
-在apply模式下，也可以使用--greedy参数。
+在apply模式下，我们仍然可以使用--greedy参数。
 
-5）可以录制下来待裁剪的程序信息，然后重复执行裁剪吗？
-支持，用上面提到的【录制】模式进行录制，然后复用录制的json文件，重复执行【应用】模式即可。
+5）我可以录制下来待裁剪的程序信息，然后在自动构建中重复执行裁剪吗？
+支持，用上面提到的【录制】模式(--record)进行录制，然后复用录制的json文件，重复执行【应用】(--apply)模式即可。
