@@ -90,3 +90,7 @@ In Apply mode, we can still use the --greedy parameter.
 ## 5)Can I record information about the program to be trimmed and repeat the trimming in an automated build multiple times?  
 
 Yes. Please use the --record mode mentioned above, then reuse the recorded JSON file with --apply during building.  
+
+## 6) How it works?
+
+Please check the post out: [https://yangzhongke8.medium.com/two-steps-to-builder-a-net-trimmer-application-a3c392757b66](https://yangzhongke8.medium.com/two-steps-to-builder-a-net-trimmer-application-a3c392757b66)

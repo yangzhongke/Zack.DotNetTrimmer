@@ -90,3 +90,7 @@ Zack.DotNetTrimmer.exe --greedy --file d:\a\ASPNETCore6WebAPI1.exe
 ## 5）我可以录制下来待裁剪的程序信息，然后在自动构建中重复执行裁剪吗？
 
 支持，用上面提到的【录制】模式(--record)进行录制，然后复用录制的json文件，重复执行【应用】(--apply)模式即可。
+
+## 6）这个项目的工作原理是什么？
+
+请查看这篇文章： [https://www.cnblogs.com/rupeng/p/16036266.html](https://www.cnblogs.com/rupeng/p/16036266.html)

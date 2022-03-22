@@ -39,10 +39,12 @@ public class Trimmer
             string recordFileName = options.RecordFileName;
             if (File.Exists(recordFileName))
             {
+                WriteInfo($"{recordFileName} exists, and new activites will be merged into it.");
                 recordFileInfo = JsonHelper.LoadFromFile<RecordFileInfo>(recordFileName);
             }
             else
             {
+                WriteInfo($"{recordFileName}  doesn't exist, and it will be created.");
                 recordFileInfo = new RecordFileInfo();
             }
             if (!RunApp(startupFile, recordFileInfo))
@@ -145,7 +147,15 @@ public class Trimmer
         var source = new EventPipeEventSource(session.EventStream);
         source.Clr.All += (TraceEvent obj) =>
         {
-            TraceEventProcessor.Process(recordFileInfo, obj);
+            try
+            {
+                TraceEventProcessor.Process(recordFileInfo, obj);
+            }
+            catch(Exception ex)
+            {
+                WriteWarning($"Exception was thrown when passing {obj.GetType()}");
+                WriteWarning(ex.ToString());
+            }
         };
         try
         {
